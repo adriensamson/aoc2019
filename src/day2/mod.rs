@@ -9,33 +9,50 @@ pub fn step1(input : &str) {
     println!("{}", intcode.get_at(0));
 }
 
-pub fn step2(input : &str) {}
+const TARGET : usize = 19690720;
 
-#[derive(Debug)]
+pub fn step2(input : &str) {
+    let base = IntCode::from_str(input);
+    'outer: for noun in 0..=99 {
+        for verb in 0..=99 {
+            let mut intcode = base.clone();
+            intcode.set_at(1, noun);
+            intcode.set_at(2, verb);
+            intcode.run();
+
+            if intcode.get_at(0) == TARGET {
+                println!("100 * {} + {} = {}", noun, verb, 100 * noun + verb);
+                break 'outer;
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 struct IntCode {
-    program : Vec<usize>,
-    opi: usize,
+    memory: Vec<usize>,
+    ip: usize,
 }
 
 impl IntCode {
     pub fn from_str(input : &str) -> IntCode {
-        let program = input.split(",").map(|s| usize::from_str(s).unwrap()).collect();
+        let memory = input.split(",").map(|s| usize::from_str(s).unwrap()).collect();
         IntCode {
-            program,
-            opi: 0,
+            memory,
+            ip: 0,
         }
     }
 
     fn run_op(&mut self) -> bool {
-        match self.program[self.opi] {
+        match self.memory[self.ip] {
             1 => {
-                self.set_at_opi(self.opi + 3, self.get_at_opi(self.opi + 1) + self.get_at_opi(self.opi + 2));
-                self.opi += 4;
+                self.set_at_p(self.ip + 3, self.get_at_p(self.ip + 1) + self.get_at_p(self.ip + 2));
+                self.ip += 4;
                 true
             }
             2 => {
-                self.set_at_opi(self.opi + 3, self.get_at_opi(self.opi + 1) * self.get_at_opi(self.opi + 2));
-                self.opi += 4;
+                self.set_at_p(self.ip + 3, self.get_at_p(self.ip + 1) * self.get_at_p(self.ip + 2));
+                self.ip += 4;
                 true
             }
             99 => false,
@@ -56,19 +73,19 @@ impl IntCode {
     }
 
     fn get_at(&self, i : usize) -> usize {
-        self.program[i]
+        self.memory[i]
     }
 
-    fn get_at_opi(&self, opi : usize) -> usize {
-        self.get_at(self.get_at(opi))
+    fn get_at_p(&self, p : usize) -> usize {
+        self.get_at(self.get_at(p))
     }
 
     fn set_at(&mut self, i : usize, val : usize) {
-        self.program[i] = val;
+        self.memory[i] = val;
     }
 
-    fn set_at_opi(&mut self, opi : usize, val : usize) {
-        let i = self.get_at(opi);
+    fn set_at_p(&mut self, p : usize, val : usize) {
+        let i = self.get_at(p);
         self.set_at(i, val);
     }
 
