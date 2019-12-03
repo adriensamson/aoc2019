@@ -9,7 +9,14 @@ pub fn step1(input : &str) {
     println!("{}", intersections[1].dist(&origin));
 }
 
-pub fn step2(input : &str) {}
+pub fn step2(input : &str) {
+    let paths : Vec<Path> = input.lines().take(2).map(|str| Path::from_str(str)).collect();
+    let intersections = paths[0].get_intersections(&paths[1]);
+    let mut steps : Vec<i64> = intersections.iter().map(|int| paths[0].steps_to_coord(int).unwrap() + paths[1].steps_to_coord(int).unwrap()).collect();
+    steps.sort();
+    println!("{:?}", steps);
+    println!("{}", steps[1]);
+}
 
 struct Path {
     segments : Vec<PathSegment>,
@@ -59,6 +66,18 @@ impl Path {
             }
         }
         vec
+    }
+
+    fn steps_to_coord(&self, to : &Coord) -> Option<i64> {
+        let mut steps = 0;
+        for segment in &self.segments {
+            if segment.contains(to) {
+                steps += segment.from.dist(to);
+                return Some(steps);
+            }
+            steps += segment.len;
+        }
+        None
     }
 }
 
