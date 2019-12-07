@@ -18,7 +18,16 @@ pub fn step1(input : &str) {
 }
 
 pub fn step2(input : &str) {
-
+    let (min, max) = parse_range(input);
+    let mut current = min;
+    let mut nb = 0;
+    while current < max {
+        if current.has_adjacent_same_digits2() {
+            nb += 1;
+        }
+        current = current.next();
+    }
+    println!("{}", nb);
 }
 
 fn parse_range(input : &str) -> (SixDigits, SixDigits) {
@@ -54,6 +63,14 @@ impl SixDigits {
             || self.d2 == self.d3
             || self.d3 == self.d4
             || self.d4 == self.d5
+    }
+
+    fn has_adjacent_same_digits2(&self) -> bool {
+        self.d0 == self.d1 && self.d1 != self.d2
+            || self.d1 == self.d2 && self.d0 != self.d1 && self.d2 != self.d3
+            || self.d2 == self.d3 && self.d1 != self.d2 && self.d3 != self.d4
+            || self.d3 == self.d4 && self.d2 != self.d3 && self.d4 != self.d5
+            || self.d4 == self.d5 && self.d3 != self.d4
     }
 
     fn next(&self) -> SixDigits {
