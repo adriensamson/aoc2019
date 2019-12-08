@@ -12,7 +12,7 @@ mod day4;
 mod day5;
 
 const DEFAULT_DAY : i32 = 5;
-const DEFAULT_STEP : i32 = 1;
+const DEFAULT_STEP : i32 = 2;
 const DEFAULT_FILE : &str = "input";
 
 fn main() {

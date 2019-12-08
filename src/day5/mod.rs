@@ -6,7 +6,8 @@ pub fn step1(input : &str) {
 }
 
 pub fn step2(input : &str) {
-
+    let mut program = IntCode::from_str(input, VecPrintIo::new(vec![5]));
+    program.run();
 }
 
 
@@ -81,6 +82,32 @@ impl<Io : IntCodeIo> IntCode<Io> {
                 self.ip += 2;
                 true
             },
+            5 => {
+                if self.get_param(1) != 0 {
+                    self.ip = self.get_param(2) as usize;
+                } else {
+                    self.ip += 3;
+                }
+                true
+            },
+            6 => {
+                if self.get_param(1) == 0 {
+                    self.ip = self.get_param(2) as usize;
+                } else {
+                    self.ip += 3;
+                }
+                true
+            },
+            7 => {
+                self.set_at_p(self.ip + 3, if self.get_param(1) < self.get_param(2) { 1 } else { 0 });
+                self.ip += 4;
+                true
+            }
+            8 => {
+                self.set_at_p(self.ip + 3, if self.get_param(1) == self.get_param(2) { 1 } else { 0 });
+                self.ip += 4;
+                true
+            }
             99 => false,
             opcode => {
                 println!("Unknown opcode {}", opcode);
