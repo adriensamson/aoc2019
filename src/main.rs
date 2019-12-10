@@ -5,15 +5,17 @@ use std::env;
 use std::str::FromStr;
 use std::fs::read_to_string;
 
+mod intcode;
 mod day1;
 mod day2;
 mod day3;
 mod day4;
 mod day5;
 mod day6;
+mod day7;
 
-const DEFAULT_DAY : i32 = 6;
-const DEFAULT_STEP : i32 = 2;
+const DEFAULT_DAY : i32 = 7;
+const DEFAULT_STEP : i32 = 1;
 const DEFAULT_FILE : &str = "input";
 
 fn main() {
@@ -37,6 +39,8 @@ fn main() {
         (5, 2) => day5::step2(input),
         (6, 1) => day6::step1(input),
         (6, 2) => day6::step2(input),
+        (7, 1) => day7::step1(input),
+        (7, 2) => day7::step2(input),
         _ => println!("Unknown day or step"),
     }
 }
