@@ -1,8 +1,9 @@
 use std::collections::VecDeque;
 use std::str::FromStr;
+use std::cell::RefCell;
 
 pub trait IntCodeIo {
-    fn input(&mut self) -> i64;
+    fn input(&mut self) -> Option<i64>;
     fn output(&mut self, val : i64);
 }
 
@@ -19,8 +20,8 @@ impl VecPrintIo {
 }
 
 impl IntCodeIo for VecPrintIo {
-    fn input(&mut self) -> i64 {
-        self.input_data.pop_front().unwrap()
+    fn input(&mut self) -> Option<i64> {
+        self.input_data.pop_front()
     }
     fn output(&mut self, val : i64) {
         println!("{}", val);
@@ -28,12 +29,12 @@ impl IntCodeIo for VecPrintIo {
 }
 
 pub struct VecVecIo<'a> {
-    input_data: &'a mut VecDeque<i64>,
-    output_data: &'a mut VecDeque<i64>,
+    input_data: &'a RefCell<VecDeque<i64>>,
+    output_data: &'a RefCell<VecDeque<i64>>,
 }
 
 impl<'a> VecVecIo<'a> {
-    pub fn new(input_data : &'a mut VecDeque<i64>, output_data : &'a mut VecDeque<i64>) -> VecVecIo<'a> {
+    pub fn new(input_data : &'a RefCell<VecDeque<i64>>, output_data : &'a RefCell<VecDeque<i64>>) -> VecVecIo<'a> {
         VecVecIo {
             input_data,
             output_data,
@@ -42,12 +43,19 @@ impl<'a> VecVecIo<'a> {
 }
 
 impl<'a> IntCodeIo for VecVecIo<'a> {
-    fn input(&mut self) -> i64 {
-        self.input_data.pop_front().unwrap()
+    fn input(&mut self) -> Option<i64> {
+        self.input_data.borrow_mut().pop_front()
     }
     fn output(&mut self, val : i64) {
-        self.output_data.push_back(val);
+        self.output_data.borrow_mut().push_back(val);
     }
+}
+
+#[derive(Eq, PartialEq)]
+pub enum RunState {
+    Halted,
+    Error,
+    WaitingForInput,
 }
 
 #[derive(Debug, Clone)]
@@ -67,29 +75,33 @@ impl<Io : IntCodeIo> IntCode<Io> {
         }
     }
 
-    fn run_op(&mut self) -> bool {
+    fn run_op(&mut self) -> Option<RunState> {
         let opcode = self.memory[self.ip] % 100;
         match opcode {
             1 => {
                 self.set_at_p(self.ip + 3, self.get_param(1) + self.get_param(2));
                 self.ip += 4;
-                true
+                None
             }
             2 => {
                 self.set_at_p(self.ip + 3, self.get_param(1) * self.get_param(2));
                 self.ip += 4;
-                true
+                None
             }
             3 => {
-                let val = self.io.input();
-                self.set_at_p(self.ip + 1, val);
-                self.ip += 2;
-                true
+                match self.io.input() {
+                    None => { return Some(RunState::WaitingForInput); }
+                    Some(val) => {
+                        self.set_at_p(self.ip + 1, val);
+                        self.ip += 2;
+                        None
+                    }
+                }
             },
             4 => {
                 self.io.output(self.get_param(1));
                 self.ip += 2;
-                true
+                None
             },
             5 => {
                 if self.get_param(1) != 0 {
@@ -97,7 +109,7 @@ impl<Io : IntCodeIo> IntCode<Io> {
                 } else {
                     self.ip += 3;
                 }
-                true
+                None
             },
             6 => {
                 if self.get_param(1) == 0 {
@@ -105,31 +117,31 @@ impl<Io : IntCodeIo> IntCode<Io> {
                 } else {
                     self.ip += 3;
                 }
-                true
+                None
             },
             7 => {
                 self.set_at_p(self.ip + 3, if self.get_param(1) < self.get_param(2) { 1 } else { 0 });
                 self.ip += 4;
-                true
+                None
             }
             8 => {
                 self.set_at_p(self.ip + 3, if self.get_param(1) == self.get_param(2) { 1 } else { 0 });
                 self.ip += 4;
-                true
+                None
             }
-            99 => false,
+            99 => Some(RunState::Halted),
             opcode => {
                 println!("Unknown opcode {}", opcode);
-                false
+                Some(RunState::Error)
             },
         }
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> RunState {
         loop {
-            let run= self.run_op();
-            if !run {
-                break;
+            match self.run_op() {
+                None => {},
+                Some(state) => { return state; }
             }
         }
     }
