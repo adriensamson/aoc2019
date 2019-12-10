@@ -160,10 +160,6 @@ impl<Io : IntCodeIo> IntCode<Io> {
         self.memory[i]
     }
 
-    fn get_at_p(&self, p : usize) -> i64 {
-        self.get_at(self.get_at(p) as usize)
-    }
-
     fn set_at(&mut self, i : usize, val : i64) {
         self.memory[i] = val;
     }
