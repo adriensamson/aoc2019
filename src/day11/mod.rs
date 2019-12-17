@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use crate::intcode::{IntCode, IntCodeIo};
 use std::cell::RefCell;
+use std::fmt;
 
 pub fn step1(input : &str) {
     let robot = RefCell::new(Robot::new());
@@ -10,7 +11,14 @@ pub fn step1(input : &str) {
     println!("{}", robot.borrow().count_painted_panels());
 }
 
-pub fn step2(input : &str) {}
+pub fn step2(input : &str) {
+    let robot = RefCell::new(Robot::new());
+    robot.borrow_mut().set_color(true);
+    let io = RobotIo::new(&robot);
+    let mut program = IntCode::from_str(input, io);
+    program.run();
+    println!("{}", robot.borrow());
+}
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 enum Direction {
@@ -91,6 +99,23 @@ impl Robot {
             self.direction = self.direction.turn_left();
         }
         self.position.move_in_direction(self.direction);
+    }
+}
+
+impl fmt::Display for Robot {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        let min_x = self.panels.keys().map(|c| c.x).min().unwrap();
+        let max_x = self.panels.keys().map(|c| c.x).max().unwrap();
+        let min_y = self.panels.keys().map(|c| c.y).min().unwrap();
+        let max_y = self.panels.keys().map(|c| c.y).max().unwrap();
+
+        for y in min_y..=max_y {
+            for x in min_x..=max_x {
+                write!(f, "{}", if *self.panels.get(&Coord {x, y}).unwrap_or(&false) { "#" } else { " " })?
+            }
+            write!(f, "\n")?
+        }
+        Result::Ok(())
     }
 }
 
