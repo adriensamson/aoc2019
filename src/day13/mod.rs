@@ -13,7 +13,14 @@ pub fn step1(input : &str) {
     println!("{}", nb_block);
 }
 
-pub fn step2(input : &str) {}
+pub fn step2(input : &str) {
+    let screen = RefCell::new(Screen::new());
+    let mut program = IntCode::from_str(input, ScreenIo::new(&screen));
+    program.set_at(0, 2);
+    program.run();
+    println!("{}", screen.borrow());
+    println!("{}", screen.borrow().get_score());
+}
 
 #[derive(Copy, Clone, Hash, PartialEq, Eq)]
 enum Tile {
@@ -49,11 +56,15 @@ impl Tile {
 
 struct Screen {
     tiles : HashMap<(i64, i64), Tile>,
+    score : i64,
 }
 
 impl Screen {
     fn new() -> Screen {
-        Screen { tiles : HashMap::new() }
+        Screen {
+            tiles : HashMap::new(),
+            score : 0,
+        }
     }
 
     fn get(&self, x : i64, y : i64) -> Tile {
@@ -62,6 +73,14 @@ impl Screen {
 
     fn set(&mut self, x : i64, y : i64, val : Tile) {
         self.tiles.insert((x, y), val);
+    }
+
+    fn set_score(&mut self, val : i64) {
+        self.score = val;
+    }
+
+    fn get_score(&self) -> i64 {
+        self.score
     }
 }
 
@@ -104,7 +123,20 @@ impl<'a> ScreenIo<'a> {
 
 impl<'a> IntCodeIo for ScreenIo<'a> {
     fn input(&mut self) -> Option<i64> {
-        None
+        let x_paddle = self.screen.borrow().tiles.iter().find(|(_, t)| **t == Tile::HPaddle).map(|(xy, _)| xy.0);
+        let x_ball = self.screen.borrow().tiles.iter().find(|(_, t)| **t == Tile::Ball).map(|(xy, _)| xy.0);
+        match (x_paddle, x_ball) {
+            (Some(p), Some(b)) => {
+                if p < b {
+                    Some(1)
+                } else if p > b {
+                    Some(-1)
+                } else {
+                    Some(0)
+                }
+            },
+            _ => None,
+        }
     }
 
     fn output(&mut self, val: i64) {
@@ -116,7 +148,11 @@ impl<'a> IntCodeIo for ScreenIo<'a> {
                 self.output_state = OutputState::XY(x, val);
             },
             OutputState::XY(x, y) => {
-                self.screen.borrow_mut().set(x, y, Tile::from_i64(val));
+                if x == -1 && y == 0 {
+                    self.screen.borrow_mut().set_score(val);
+                } else {
+                    self.screen.borrow_mut().set(x, y, Tile::from_i64(val));
+                }
                 self.output_state = OutputState::Empty;
             },
         }

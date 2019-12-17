@@ -179,7 +179,7 @@ impl<Io : IntCodeIo> IntCode<Io> {
         *self.memory.get(&i).unwrap_or(&0i64)
     }
 
-    fn set_at(&mut self, i : usize, val : i64) {
+    pub fn set_at(&mut self, i : usize, val : i64) {
         self.memory.insert(i, val);
     }
 }
