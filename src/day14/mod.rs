@@ -1,6 +1,5 @@
 use regex::Regex;
 use std::str::FromStr;
-use std::iter::FromIterator;
 use std::collections::HashMap;
 
 pub fn step1(input : &str) {

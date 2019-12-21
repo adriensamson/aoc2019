@@ -1,6 +1,5 @@
-use crate::intcode::{IntCode, VecVecIo, IntCodeIo};
-use std::collections::{HashMap, VecDeque};
-use std::cell::RefCell;
+use crate::intcode::{IntCode, IntCodeIo};
+use std::collections::HashMap;
 
 pub fn step1(input : &str) {
     let mut droid = RepairDroid::create(input);
@@ -21,16 +20,6 @@ enum Direction {
 }
 
 impl Direction {
-    fn from_i64(i : i64) -> Direction {
-        match i {
-            1 => Direction::North,
-            2 => Direction::South,
-            3 => Direction::West,
-            4 => Direction::East,
-            _ => panic!(),
-        }
-    }
-
     fn to_i64(&self) -> i64 {
         match self {
             Direction::North => 1,
@@ -159,10 +148,6 @@ impl RepairDroid {
             }
             _ => panic!(),
         }
-    }
-
-    fn get_oxygen_coord(&self) -> Option<Coord> {
-        self.map.iter().find(|(_, s)| **s == State::Oxygen).map(|(c, _)| *c)
     }
 
     fn is_explored(&self, dir : Direction) -> bool {
