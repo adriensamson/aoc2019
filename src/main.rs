@@ -1,6 +1,9 @@
 extern crate regex;
 extern crate core;
 
+#[macro_use]
+extern crate lazy_static;
+
 use std::env;
 use std::str::FromStr;
 use std::fs::read_to_string;
@@ -19,9 +22,10 @@ mod day10;
 mod day11;
 mod day12;
 mod day13;
+mod day14;
 
-const DEFAULT_DAY : i32 = 13;
-const DEFAULT_STEP : i32 = 2;
+const DEFAULT_DAY : i32 = 14;
+const DEFAULT_STEP : i32 = 1;
 const DEFAULT_FILE : &str = "input";
 
 fn main() {
@@ -59,6 +63,8 @@ fn main() {
         (12, 2) => day12::step2(input),
         (13, 1) => day13::step1(input),
         (13, 2) => day13::step2(input),
+        (14, 1) => day14::step1(input),
+        (14, 2) => day14::step2(input),
         _ => println!("Unknown day or step"),
     }
 }
