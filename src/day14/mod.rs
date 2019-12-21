@@ -5,10 +5,26 @@ use std::collections::HashMap;
 
 pub fn step1(input : &str) {
     let reactions = AllReactions::from_str(input);
-    let ingr = reactions.get_x_needed_for_y(&String::from("ORE"), &String::from("FUEL"));
-    println!("{:?}", ingr.unwrap());
+    let n_ore = reactions.get_x_needed_for_y(&String::from("ORE"), &String::from("FUEL"), 1).unwrap();
+    println!("{:?}", n_ore);
 }
-pub fn step2(input : &str) {}
+pub fn step2(input : &str) {
+    let reactions = AllReactions::from_str(input);
+    let n_ore = reactions.get_x_needed_for_y(&String::from("ORE"), &String::from("FUEL"), 1).unwrap();
+    let avail_ore = 1_000_000_000_000_usize;
+    let mut n_fuel_min =  avail_ore / n_ore;
+    let mut n_fuel_max = n_fuel_min * 2;
+    while n_fuel_min < n_fuel_max - 1 {
+        let testing = (n_fuel_min + n_fuel_max) / 2;
+        let needed = reactions.get_x_needed_for_y(&String::from("ORE"), &String::from("FUEL"), testing).unwrap();
+        if needed < avail_ore {
+            n_fuel_min = testing;
+        } else {
+            n_fuel_max = testing;
+        }
+    }
+    println!("{:?}", n_fuel_min);
+}
 
 lazy_static! {
     static ref ELEMENT_RE : Regex = Regex::new("(\\d+) ([A-Z]+)").unwrap();
@@ -62,9 +78,9 @@ impl AllReactions {
         AllReactions {reactions}
     }
 
-    fn get_x_needed_for_y(&self, x : &String, y : &String) -> Option<usize> {
+    fn get_x_needed_for_y(&self, x : &String, y : &String, ny : usize) -> Option<usize> {
         let mut needed = HashMap::new();
-        needed.insert(y, 1);
+        needed.insert(y, ny);
         let mut consumed = 0usize;
         let mut remaining = HashMap::new();
         while needed.len() > 0 {
