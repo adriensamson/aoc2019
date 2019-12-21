@@ -6,7 +6,11 @@ pub fn step1(input : &str) {
     let mut droid = RepairDroid::create(input);
     println!("{:?}", droid.explore(0));
 }
-pub fn step2(input : &str) {}
+pub fn step2(input : &str) {
+    let mut droid = RepairDroid::create(input);
+    droid.explore(0);
+    println!("{}", droid.fill_oxygen());
+}
 
 #[derive(Copy, Clone)]
 enum Direction {
@@ -76,7 +80,7 @@ impl Coord {
     }
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Eq, PartialEq, Copy, Clone)]
 enum State {
     Empty,
     Wall,
@@ -173,16 +177,56 @@ impl RepairDroid {
                     return None;
                 }
                 if self.try_move(dir) {
-                    if self.get_oxygen_coord() != None {
-                        return Some(depth + 1);
-                    }
+                    let found = *self.map.get(&self.position).unwrap() == State::Oxygen;
                     let d = self.explore(depth + 1);
                     self.try_move(-dir);
-                    d
+                    if found { Some(depth + 1) } else { d }
                 } else {
                     None
                 }
             })
             .min()
+    }
+
+    fn fill_oxygen(&mut self) -> usize {
+        let dirs = vec![Direction::North, Direction::West, Direction::South, Direction::East];
+        let mut nstep = 0usize;
+        loop {
+            let to_fill : Vec<Coord> = self.map.iter()
+                .filter(|(_, &s)| s == State::Oxygen)
+                .flat_map(|(c, _)| dirs.iter().map(move | dir | c.add(*dir)))
+                .filter(|c| self.map.get(c) == Some(&State::Empty))
+                .collect();
+            if to_fill.len() == 0 {
+                return nstep;
+            }
+            for c in to_fill {
+                self.map.insert(c, State::Oxygen);
+            }
+            nstep += 1;
+        }
+    }
+}
+
+impl std::fmt::Display for RepairDroid {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        let min_x = self.map.keys().map(|c| c.x).min().unwrap();
+        let max_x = self.map.keys().map(|c| c.x).max().unwrap();
+        let min_y = self.map.keys().map(|c| c.y).min().unwrap();
+        let max_y = self.map.keys().map(|c| c.y).max().unwrap();
+        for y in min_y..=max_y {
+            for x in min_x..=max_x {
+                match self.map.get(&Coord {x, y}) {
+                    None => write!(f, "?")?,
+                    Some(s) => match s {
+                        State::Wall => write!(f, "#")?,
+                        State::Empty => write!(f, " ")?,
+                        State::Oxygen => write!(f, "O")?,
+                    }
+                }
+            }
+            write!(f, "\n")?;
+        }
+        Result::Ok(())
     }
 }
