@@ -62,7 +62,7 @@ pub enum RunState {
 pub struct IntCode<Io : IntCodeIo> {
     memory: HashMap<usize, i64>,
     ip: usize,
-    io: Box<Io>,
+    pub io: Box<Io>,
     relative_base: i64,
 }
 
