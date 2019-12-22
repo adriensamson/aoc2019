@@ -7,7 +7,18 @@ pub fn step1(input : &str) {
     }
     println!("{}{}{}{}{}{}{}{}", signal.digits[0], signal.digits[1], signal.digits[2], signal.digits[3], signal.digits[4], signal.digits[5], signal.digits[6], signal.digits[7]);
 }
-pub fn step2(input : &str) {}
+pub fn step2(input : &str) {
+    let mut real_input = String::new();
+    for _ in 0..10_000 {
+        real_input.push_str(input);
+    }
+    let mut signal = Signal::from_str(&real_input);
+    for _ in 0..100 {
+        signal = signal.apply_phase();
+    }
+    let offset = usize::from_str(&input[0..7]).unwrap();
+    println!("{}{}{}{}{}{}{}{}", signal.digits[offset], signal.digits[offset+1], signal.digits[offset+2], signal.digits[offset+3], signal.digits[offset+4], signal.digits[offset+5], signal.digits[offset+6], signal.digits[offset+7]);
+}
 
 struct Signal {
     digits : Vec<i64>,

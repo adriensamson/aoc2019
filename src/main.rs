@@ -27,8 +27,8 @@ mod day15;
 mod day16;
 
 const DEFAULT_DAY : i32 = 16;
-const DEFAULT_STEP : i32 = 1;
-const DEFAULT_FILE : &str = "input";
+const DEFAULT_STEP : i32 = 2;
+const DEFAULT_FILE : &str = "test";
 
 fn main() {
     let args : Vec<String> = env::args().collect();
