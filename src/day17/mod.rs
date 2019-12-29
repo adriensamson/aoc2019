@@ -1,5 +1,4 @@
 use crate::intcode::{IntCodeIo, IntCode, VecPrintIo};
-use std::str::FromStr;
 
 pub fn step1(input : &str) {
     let mut program = IntCode::from_str(input, AsciiIo::new());
@@ -176,7 +175,6 @@ impl Coord {
 }
 
 fn factorize_path(path : &str) -> String {
-    let mut main = String::from(path);
     for a in find_segments(path, 0) {
         let main_a = String::from(path).replace(&a, "A");
         if let Some(after_a) = main_a.find(|c| c == 'R' || c == 'L' || char::is_numeric(c)) {
