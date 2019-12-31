@@ -1,12 +1,13 @@
 use std::collections::{HashSet, BinaryHeap, HashMap};
 use std::cmp::Ordering;
 use std::iter::FromIterator;
+use std::hash::Hash;
 
 pub fn step1(input : &str) {
     let map = &Map::parse(input);
     let graph_map = &GraphMap::from_map(map);
-
-    let shortest = find_shortest_path(graph_map, &map.get_starts()[0], &map.get_keys()).unwrap();
+    let start = ExaminedPath::new(graph_map, map.get_starts()[0]);
+    let shortest = find_shortest_path(start).unwrap();
 
     println!("{}", shortest.len);
 }
@@ -14,8 +15,9 @@ pub fn step2(input : &str) {
     let mut map = Map::parse(input);
     map.replace_start();
     let graph_map = &GraphMap::from_map(&map);
-
-    let shortest = find_shortest_path4(graph_map, &map.get_starts(), &map.get_keys()).unwrap();
+    let starts = map.get_starts();
+    let start_state = ExaminedPath4::new(graph_map, [starts[0], starts[1], starts[2], starts[3]]);
+    let shortest = find_shortest_path(start_state).unwrap();
 
     println!("{}", shortest.len);
 }
@@ -93,7 +95,11 @@ impl Map {
         self.rows[start.y + 1][start.x + 1] = State::Start;
     }
 
-    fn get_keys(&self) -> HashSet<char> {
+    fn get_state_at_coord(&self, c : &Coord) -> Option<State> {
+        self.rows.get(c.y).and_then(|row| row.get(c.x)).map(|s| *s)
+    }
+
+    fn get_all_keys(&self) -> HashSet<char> {
         let mut keys = HashSet::new();
         for row in &self.rows {
             for s in row {
@@ -103,10 +109,6 @@ impl Map {
             }
         }
         keys
-    }
-
-    fn get_state_at_coord(&self, c : &Coord) -> Option<State> {
-        self.rows.get(c.y).and_then(|row| row.get(c.x)).map(|s| *s)
     }
 }
 
@@ -148,6 +150,8 @@ trait ReachableKeys {
         }
         found
     }
+
+    fn has_all_keys(&self, keys : &Vec<char>) -> bool;
 }
 
 impl ReachableKeys for Map {
@@ -182,209 +186,217 @@ impl ReachableKeys for Map {
         found.sort_by_key(|a| a.1);
         found
     }
+
+    fn has_all_keys(&self, keys : &Vec<char>) -> bool {
+        self.get_all_keys().len() == keys.len()
+    }
 }
 
-#[derive(Eq)]
-struct ExaminedPath {
+trait PathState : Ord + Sized {
+    type HashKey : Hash + Eq;
+    fn is_finished(&self) -> bool;
+    fn get_next_states(&self) -> Vec<Self>;
+    fn get_hash_key(&self) -> Self::HashKey;
+    fn distance(&self) -> usize;
+}
+
+fn find_shortest_path<P : PathState>(start : P) -> Option<P> {
+    let mut paths = BinaryHeap::new();
+    paths.push(start);
+    let mut found = BinaryHeap::new();
+    let mut preferred_by_hash_key: HashMap<P::HashKey, usize> = HashMap::new();
+
+    loop {
+        let ep = &paths.pop().unwrap();
+        for next in ep.get_next_states() {
+            let hash_key = next.get_hash_key();
+            let min_by_has_key = preferred_by_hash_key.entry(hash_key).or_insert(next.distance() + 1);
+            if next.is_finished() {
+                found.push(next);
+            } else if next.distance() < *min_by_has_key {
+                *min_by_has_key = next.distance();
+                paths.push(next);
+            }
+        }
+        if paths.len() == 0 {
+            break;
+        }
+        if let (Some(sp), Some(np)) = (found.peek(), paths.peek()) {
+            if sp.distance() < np.distance() {
+                break;
+            }
+        }
+    };
+
+    found.pop()
+}
+
+struct ExaminedPath<'a> {
+    map : &'a dyn ReachableKeys,
     c : Coord,
     len : usize,
     keys : Vec<char>,
 }
 
-impl ExaminedPath {
-    fn get_next_paths(&self, map : &dyn ReachableKeys) -> Vec<ExaminedPath> {
+impl<'a> ExaminedPath<'a> {
+    fn new(map: &'a dyn ReachableKeys, start: Coord) -> ExaminedPath<'a> {
+        ExaminedPath {
+            map,
+            c: start,
+            len: 0,
+            keys: Vec::new(),
+        }
+    }
+}
+
+impl<'a> PathState for ExaminedPath<'a> {
+    type HashKey = String;
+
+    fn is_finished(&self) -> bool {
+        self.map.has_all_keys(&self.keys)
+    }
+
+    fn get_next_states(&self) -> Vec<ExaminedPath<'a>> {
         let mut next = vec![];
-        for (key, at, len) in map.get_reachable_keys(&self.c, &self.keys) {
+        for (key, at, len) in self.map.get_reachable_keys(&self.c, &self.keys) {
             let mut keys = self.keys.clone();
             keys.push(key);
-            next.push(ExaminedPath {c : at, len: self.len + len, keys});
+            next.push(ExaminedPath {map: self.map, c : at, len: self.len + len, keys});
         }
         next
     }
 
-    fn key_set_str(&self) -> String {
+    fn get_hash_key(&self) -> String {
         let mut ordered = self.keys.clone();
         ordered.pop();
         ordered.sort();
         ordered.push(*self.keys.last().unwrap());
         String::from_iter(ordered)
     }
+
+    fn distance(&self) -> usize {
+        self.len
+    }
 }
 
-impl Ord for ExaminedPath {
+impl Ord for ExaminedPath<'_> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.len.cmp(&other.len).reverse()
     }
 }
 
-impl PartialOrd for ExaminedPath {
+impl PartialOrd for ExaminedPath<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl PartialEq for ExaminedPath {
+impl PartialEq for ExaminedPath<'_> {
     fn eq(&self, other: &Self) -> bool {
         self.len == other.len
     }
 }
 
-fn find_shortest_path(map : &dyn ReachableKeys, start : &Coord, all_keys : &HashSet<char>) -> Option<ExaminedPath> {
-    let mut paths = BinaryHeap::new();
-    paths.push(ExaminedPath { c: *start, keys: vec![], len : 0});
-    let mut found = BinaryHeap::new();
-    let mut preferred_by_key_set : HashMap<String, usize> = HashMap::new();
+impl Eq for ExaminedPath<'_> {}
 
-    loop {
-        let ep = &paths.pop().unwrap();
-        for next in ep.get_next_paths(map) {
-            let key_set = next.key_set_str();
-            let min_by_key_set = preferred_by_key_set.entry(key_set).or_insert(next.len + 1);
-            //println!("{:?} {}", next.keys, next.len);
-            if all_keys.len() == next.keys.len() {
-                found.push(next);
-            } else if next.len < *min_by_key_set {
-                *min_by_key_set = next.len;
-                paths.push(next);
-            } else {
-                //println!("ignoring {}", *min_by_key_set);
-            }
-        }
-        if paths.len() == 0 {
-            break;
-        }
-        if let (Some(sp), Some(np)) = (found.peek(), paths.peek()) {
-            if sp.len < np.len {
-                break;
-            }
-        }
-    };
-
-    found.pop()
-}
-
-#[derive(Eq)]
-struct ExaminedPath4 {
-    c : (Coord, Coord, Coord, Coord),
+struct ExaminedPath4<'a> {
+    map : &'a dyn ReachableKeys,
+    c : [Coord; 4],
     len : usize,
     previous_keys : Vec<char>,
-    current_keys : (char, char, char, char),
+    current_keys : [char; 4],
 }
 
-impl ExaminedPath4 {
-    fn get_next_paths(&self, map : &dyn ReachableKeys) -> Vec<ExaminedPath4> {
-        let mut next = vec![];
-        for (key, at, len) in map.get_reachable_keys(&self.c.0, &self.get_keys()) {
-            let mut previous_keys = self.previous_keys.clone();
-            if self.current_keys.0 != '@' {
-                previous_keys.push(self.current_keys.0);
-            }
-            next.push(ExaminedPath4 { c: (at, self.c.1, self.c.2, self.c.3), len: self.len + len, previous_keys, current_keys: (key, self.current_keys.1, self.current_keys.2, self.current_keys.3) });
+impl<'a> ExaminedPath4<'a> {
+    fn new(map: &'a dyn ReachableKeys, starts: [Coord; 4]) -> ExaminedPath4<'a> {
+        ExaminedPath4 {
+            map,
+            c: starts,
+            len: 0,
+            previous_keys: Vec::new(),
+            current_keys: ['@', '@', '@', '@'],
         }
-        for (key, at, len) in map.get_reachable_keys(&self.c.1, &self.get_keys()) {
-            let mut previous_keys = self.previous_keys.clone();
-            if self.current_keys.1 != '@' {
-                previous_keys.push(self.current_keys.1);
-            }
-            next.push(ExaminedPath4 { c: (self.c.0, at, self.c.2, self.c.3), len: self.len + len, previous_keys, current_keys: (self.current_keys.0, key, self.current_keys.2, self.current_keys.3) });
-        }
-        for (key, at, len) in map.get_reachable_keys(&self.c.2, &self.get_keys()) {
-            let mut previous_keys = self.previous_keys.clone();
-            if self.current_keys.2 != '@' {
-                previous_keys.push(self.current_keys.2);
-            }
-            next.push(ExaminedPath4 { c: (self.c.0, self.c.1, at,  self.c.3), len: self.len + len, previous_keys, current_keys: (self.current_keys.0, self.current_keys.1, key, self.current_keys.3) });
-        }
-        for (key, at, len) in map.get_reachable_keys(&self.c.3, &self.get_keys()) {
-            let mut previous_keys = self.previous_keys.clone();
-            if self.current_keys.3 != '@' {
-                previous_keys.push(self.current_keys.3);
-            }
-            next.push(ExaminedPath4 { c: (self.c.0, self.c.1, self.c.2, at), len: self.len + len, previous_keys, current_keys: (self.current_keys.0, self.current_keys.1, self.current_keys.2, key) });
-        }
-        next
-    }
-
-    fn key_set_str(&self) -> String {
-        let mut ordered = self.previous_keys.clone();
-        ordered.sort();
-        ordered.push(self.current_keys.0);
-        ordered.push(self.current_keys.1);
-        ordered.push(self.current_keys.2);
-        ordered.push(self.current_keys.3);
-        String::from_iter(ordered)
     }
 
     fn get_keys(&self) -> Vec<char> {
         let mut keys = self.previous_keys.clone();
-        for k in vec![self.current_keys.0, self.current_keys.1, self.current_keys.2, self.current_keys.3] {
-            if k != '@' {
-                keys.push(k);
+        for k in &self.current_keys {
+            if *k != '@' {
+                keys.push(*k);
             }
         }
         keys
     }
 }
 
-impl Ord for ExaminedPath4 {
+impl PathState for ExaminedPath4<'_> {
+    type HashKey = String;
+
+    fn is_finished(&self) -> bool {
+        self.map.has_all_keys(&self.get_keys())
+    }
+
+    fn get_next_states(&self) -> Vec<Self> {
+        let mut next = vec![];
+        for (i, c) in self.c.iter().enumerate() {
+            for (key, at, len) in self.map.get_reachable_keys(c, &self.get_keys()) {
+                let mut previous_keys = self.previous_keys.clone();
+                if self.current_keys[i] != '@' {
+                    previous_keys.push(self.current_keys[i]);
+                }
+                let mut new_c = self.c.clone();
+                new_c[i] = at;
+                let mut current_keys = self.current_keys.clone();
+                current_keys[i] = key;
+                next.push(ExaminedPath4 { map: self.map, c: new_c, len: self.len + len, previous_keys, current_keys });
+            }
+        }
+        next
+    }
+
+    fn get_hash_key(&self) -> Self::HashKey {
+        let mut ordered = self.previous_keys.clone();
+        ordered.sort();
+        for k in &self.current_keys {
+            ordered.push(*k);
+        }
+        String::from_iter(ordered)
+    }
+
+    fn distance(&self) -> usize {
+        self.len
+    }
+}
+
+impl Ord for ExaminedPath4<'_> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.len.cmp(&other.len).reverse()
     }
 }
 
-impl PartialOrd for ExaminedPath4 {
+impl PartialOrd for ExaminedPath4<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl PartialEq for ExaminedPath4 {
+impl PartialEq for ExaminedPath4<'_> {
     fn eq(&self, other: &Self) -> bool {
         self.len == other.len
     }
 }
 
-fn find_shortest_path4(map : &dyn ReachableKeys, starts : &Vec<Coord>, all_keys : &HashSet<char>) -> Option<ExaminedPath4> {
-    let mut paths = BinaryHeap::new();
-    paths.push(ExaminedPath4 { c: (starts[0], starts[1], starts[2], starts[3]), previous_keys: vec![], current_keys: ('@', '@', '@', '@'), len : 0});
-    let mut found = BinaryHeap::new();
-    let mut preferred_by_key_set : HashMap<String, usize> = HashMap::new();
-
-    loop {
-        let ep = &paths.pop().unwrap();
-        for next in ep.get_next_paths(map) {
-            let key_set = next.key_set_str();
-            let min_by_key_set = preferred_by_key_set.entry(key_set).or_insert(next.len + 1);
-            //println!("{:?} {}", next.keys, next.len);
-            if all_keys.len() == next.get_keys().len() {
-                found.push(next);
-            } else if next.len < *min_by_key_set {
-                *min_by_key_set = next.len;
-                paths.push(next);
-            } else {
-                //println!("ignoring {}", *min_by_key_set);
-            }
-        }
-        if paths.len() == 0 {
-            break;
-        }
-        if let (Some(sp), Some(np)) = (found.peek(), paths.peek()) {
-            if sp.len < np.len {
-                break;
-            }
-        }
-    };
-
-    found.pop()
-}
+impl Eq for ExaminedPath4<'_> {}
 
 struct GraphMap {
     edges : HashMap<Coord, Vec<(Coord, usize, State)>>,
+    all_keys : HashSet<char>,
 }
 
 impl GraphMap {
     fn from_map(map : &Map) -> GraphMap {
         let mut edges = HashMap::new();
+        let all_keys = map.get_all_keys();
 
         let mut current = map.get_starts();
         let mut visited = vec![];
@@ -413,12 +425,16 @@ impl GraphMap {
             e.1.sort_by_key(| a | a.1);
         }
 
-        GraphMap {edges}
+        GraphMap {edges, all_keys}
     }
 }
 
 impl ReachableKeys for GraphMap {
     fn get_reachable_nodes(&self, from: &Coord) -> Vec<(Coord, usize, State)> {
         self.edges.get(from).unwrap().to_vec()
+    }
+
+    fn has_all_keys(&self, keys : &Vec<char>) -> bool {
+        self.all_keys.len() == keys.len()
     }
 }
