@@ -9,7 +9,13 @@ pub fn step1(input : &str) {
 
     println!("{}", path.unwrap().distance);
 }
-pub fn step2(_input : &str) {}
+pub fn step2(input : &str) {
+    let map = Map::parse(input);
+
+    let path = find_shortest_path(LayeredPath::start(&map));
+
+    println!("{}", path.unwrap().distance);
+}
 
 struct Map(Vec<Vec<char>>);
 
@@ -73,6 +79,10 @@ impl Map {
             }
         }
         None
+    }
+
+    fn is_outer(&self, c : &Coord2) -> bool {
+        c.y == 2 || c.x == 2 || c.y == self.0.len() - 3 || c.x == self.0[2].len() - 1
     }
 }
 
@@ -145,3 +155,81 @@ impl PartialEq for Path<'_> {
 }
 
 impl Eq for Path<'_> {}
+
+struct LayeredPath<'a> {
+    map: &'a Map,
+    coord: Coord2,
+    layer: usize,
+    distance: usize,
+}
+
+impl<'a> LayeredPath<'a> {
+    fn start(map : &'a Map) -> LayeredPath<'a> {
+        LayeredPath {
+            map,
+            coord: map.get_start().unwrap(),
+            distance: 0,
+            layer: 0,
+        }
+    }
+}
+
+impl PathState for LayeredPath<'_> {
+    type HashKey = (usize, Coord2);
+
+    fn is_finished(&self) -> bool {
+        self.layer == 0 && self.map.get_portal_name(self.coord) == Some(('Z', 'Z'))
+    }
+
+    fn get_next_states(&self) -> Vec<Self> {
+        let mut next = Vec::new();
+        if let Some(portal_name) = self.map.get_portal_name(self.coord) {
+            if let Some(portal_out) = self.map.find_portal(portal_name, self.coord) {
+                if self.map.is_outer(&self.coord) {
+                    if self.layer > 0 {
+                        next.push(LayeredPath { coord: portal_out, distance: self.distance + 1, map: self.map, layer: self.layer - 1});
+                    }
+                } else {
+                    next.push(LayeredPath { coord: portal_out, distance: self.distance + 1, map: self.map, layer: self.layer + 1 });
+                }
+            }
+        }
+        for o in self.coord.around() {
+            match self.map.get_at(o) {
+                Some('.') => {
+                    next.push(LayeredPath {coord: o, distance: self.distance + 1, map: self.map, layer: self.layer});
+                }
+                _ => {}
+            }
+        }
+        next
+    }
+
+    fn get_hash_key(&self) -> Self::HashKey {
+        (self.layer, self.coord)
+    }
+
+    fn distance(&self) -> usize {
+        self.distance
+    }
+}
+
+impl Ord for LayeredPath<'_> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.distance.cmp(&other.distance).reverse()
+    }
+}
+
+impl PartialOrd for LayeredPath<'_> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for LayeredPath<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.distance == other.distance
+    }
+}
+
+impl Eq for LayeredPath<'_> {}
