@@ -1,6 +1,5 @@
 use crate::coord::Coord2;
 use crate::path_finder::{find_shortest_path, PathState};
-use std::cmp::Ordering;
 
 pub fn step1(input : &str) {
     let map = Map::parse(input);
@@ -136,26 +135,6 @@ impl PathState for Path<'_> {
     }
 }
 
-impl Ord for Path<'_> {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.distance.cmp(&other.distance).reverse()
-    }
-}
-
-impl PartialOrd for Path<'_> {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for Path<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        self.distance == other.distance
-    }
-}
-
-impl Eq for Path<'_> {}
-
 struct LayeredPath<'a> {
     map: &'a Map,
     coord: Coord2,
@@ -213,23 +192,3 @@ impl PathState for LayeredPath<'_> {
         self.distance
     }
 }
-
-impl Ord for LayeredPath<'_> {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.distance.cmp(&other.distance).reverse()
-    }
-}
-
-impl PartialOrd for LayeredPath<'_> {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for LayeredPath<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        self.distance == other.distance
-    }
-}
-
-impl Eq for LayeredPath<'_> {}

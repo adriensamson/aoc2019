@@ -1,7 +1,8 @@
 use std::hash::Hash;
 use std::collections::{BinaryHeap, HashMap};
+use std::cmp::Ordering;
 
-pub trait PathState : Ord + Sized {
+pub trait PathState : Sized {
     type HashKey : Hash + Eq;
     fn is_finished(&self) -> bool;
     fn get_next_states(&self) -> Vec<Self>;
@@ -9,33 +10,57 @@ pub trait PathState : Ord + Sized {
     fn distance(&self) -> usize;
 }
 
+struct DistWrapper<T : PathState>(T);
+
+impl<T : PathState> Ord for DistWrapper<T> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.0.distance().cmp(&other.0.distance()).reverse()
+    }
+}
+
+impl<T : PathState> PartialOrd for DistWrapper<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<T : PathState> PartialEq for DistWrapper<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.distance() == other.0.distance()
+    }
+}
+
+impl<T : PathState> Eq for DistWrapper<T> {}
+
 pub fn find_shortest_path<P : PathState>(start : P) -> Option<P> {
-    let mut paths = BinaryHeap::new();
-    paths.push(start);
-    let mut found = BinaryHeap::new();
     let mut preferred_by_hash_key: HashMap<P::HashKey, usize> = HashMap::new();
+    preferred_by_hash_key.insert(start.get_hash_key(), 0);
+    let mut paths = BinaryHeap::new();
+    paths.push(DistWrapper(start));
+    let mut found = BinaryHeap::new();
+
 
     loop {
         let ep = &paths.pop().unwrap();
-        for next in ep.get_next_states() {
+        for next in ep.0.get_next_states() {
             let hash_key = next.get_hash_key();
             let min_by_has_key = preferred_by_hash_key.entry(hash_key).or_insert(next.distance() + 1);
             if next.is_finished() {
-                found.push(next);
+                found.push(DistWrapper(next));
             } else if next.distance() < *min_by_has_key {
                 *min_by_has_key = next.distance();
-                paths.push(next);
+                paths.push(DistWrapper(next));
             }
         }
         if paths.len() == 0 {
             break;
         }
         if let (Some(sp), Some(np)) = (found.peek(), paths.peek()) {
-            if sp.distance() < np.distance() {
+            if sp.0.distance() < np.0.distance() {
                 break;
             }
         }
     };
 
-    found.pop()
+    found.pop().map(|w| w.0)
 }

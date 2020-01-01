@@ -1,5 +1,4 @@
 use std::collections::{HashSet, HashMap};
-use std::cmp::Ordering;
 use std::iter::FromIterator;
 
 use crate::coord::{Coord2 as Coord};
@@ -223,26 +222,6 @@ impl<'a> PathState for ExaminedPath<'a> {
     }
 }
 
-impl Ord for ExaminedPath<'_> {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.len.cmp(&other.len).reverse()
-    }
-}
-
-impl PartialOrd for ExaminedPath<'_> {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for ExaminedPath<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        self.len == other.len
-    }
-}
-
-impl Eq for ExaminedPath<'_> {}
-
 struct ExaminedPath4<'a> {
     map : &'a dyn ReachableKeys,
     c : [Coord; 4],
@@ -311,26 +290,6 @@ impl PathState for ExaminedPath4<'_> {
         self.len
     }
 }
-
-impl Ord for ExaminedPath4<'_> {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.len.cmp(&other.len).reverse()
-    }
-}
-
-impl PartialOrd for ExaminedPath4<'_> {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for ExaminedPath4<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        self.len == other.len
-    }
-}
-
-impl Eq for ExaminedPath4<'_> {}
 
 struct GraphMap {
     edges : HashMap<Coord, Vec<(Coord, usize, State)>>,
