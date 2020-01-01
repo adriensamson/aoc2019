@@ -8,7 +8,10 @@ use std::env;
 use std::str::FromStr;
 use std::fs::read_to_string;
 
+mod coord;
 mod intcode;
+mod path_finder;
+
 mod day1;
 mod day2;
 mod day3;
@@ -28,9 +31,10 @@ mod day16;
 mod day17;
 mod day18;
 mod day19;
+mod day20;
 
-const DEFAULT_DAY : i32 = 19;
-const DEFAULT_STEP : i32 = 2;
+const DEFAULT_DAY : i32 = 20;
+const DEFAULT_STEP : i32 = 1;
 const DEFAULT_FILE : &str = "input";
 
 fn main() {
@@ -80,6 +84,8 @@ fn main() {
         (18, 2) => day18::step2(input),
         (19, 1) => day19::step1(input),
         (19, 2) => day19::step2(input),
+        (20, 1) => day20::step1(input),
+        (20, 2) => day20::step2(input),
         _ => println!("Unknown day or step"),
     }
 }
