@@ -5,8 +5,9 @@ use std::iter::FromIterator;
 pub fn step1(input : &str) {
     let mut droid = IntCode::from_str(input, AsciiPrintIo::new());
     // (!A || !B || !C) && D
-    // !(A && B && && C) && D
-    let instructions = "OR A J
+    // !(A && B && C) && D
+    let instructions = "\
+OR A J
 AND B J
 AND C J
 NOT J J
@@ -18,20 +19,25 @@ WALK
     droid.run();
 }
 
-pub fn step2(_input : &str) {}
-/*
-struct Droid {
-    program : IntCode<AsciiPrintIo>,
+pub fn step2(input : &str) {
+    let mut droid = IntCode::from_str(input, AsciiPrintIo::new());
+    // !(A && B && C) && D && (E || H)
+    let instructions = "\
+OR A J
+AND B J
+AND C J
+NOT J J
+AND D J
+OR E T
+OR H T
+AND T J
+RUN
+";
+    let inst_vec = &mut VecDeque::from_iter(instructions.chars().map(|c| c as i64));
+    droid.io.input.append(inst_vec);
+    droid.run();
 }
 
-impl Droid {
-    fn new(input : &str) -> Droid {
-        Droid {
-            program: ,
-        }
-    }
-}
-*/
 struct AsciiPrintIo {
     input : VecDeque<i64>,
 }
