@@ -30,15 +30,13 @@ pub fn step2(input : &str) {
 }
 
 struct NetworkInterface {
-    controller : Rc<RefCell<dyn NetworkController>>,
     address : usize,
     queue : VecDeque<(i64, i64)>,
 }
 
 impl NetworkInterface {
-    fn new(controller : Rc<RefCell<dyn NetworkController>>, address : usize) -> NetworkInterface {
+    fn new(address : usize) -> NetworkInterface {
         NetworkInterface {
-            controller,
             address,
             queue: VecDeque::new(),
         }
@@ -59,7 +57,7 @@ impl Part1NetworkController {
     fn new(nb: usize) -> Rc<RefCell<Part1NetworkController>> {
         let c = Rc::new(RefCell::new(Part1NetworkController { interfaces: Vec::new(), exit: false }));
         for i in 0..nb {
-            c.borrow_mut().interfaces.push(Rc::new(RefCell::new(NetworkInterface::new(c.clone(), i))));
+            c.borrow_mut().interfaces.push(Rc::new(RefCell::new(NetworkInterface::new(i))));
         }
         c
     }
@@ -160,7 +158,7 @@ impl Part2NetworkController {
             last_nat_sent: None,
         }));
         for i in 0..nb {
-            c.borrow_mut().interfaces.push((false, Rc::new(RefCell::new(NetworkInterface::new(c.clone(), i)))));
+            c.borrow_mut().interfaces.push((false, Rc::new(RefCell::new(NetworkInterface::new( i)))));
         }
         c
     }
