@@ -1,21 +1,31 @@
 use std::str::FromStr;
 
-pub fn step1(input: &str) {
+#[test]
+fn test_step1() {
+    assert_eq!("654", step1("1969"))
+}
+
+pub fn step1(input: &str) -> String {
     let mut sum = 0;
     for line in input.lines().filter(|s| !s.is_empty()) {
         let mass = u64::from_str(line).unwrap();
         sum += get_fuel_for_module(mass);
     }
-    println!("{}", sum);
+    format!("{}", sum)
 }
 
-pub fn step2(input: &str) {
+#[test]
+fn test_step2() {
+    assert_eq!("966", step2("1969"))
+}
+
+pub fn step2(input: &str) -> String {
     let mut sum = 0;
     for line in input.lines().filter(|s| !s.is_empty()) {
         let mass = u64::from_str(line).unwrap();
         sum += get_total_fuel_for_module(mass);
     }
-    println!("{}", sum);
+    format!("{}", sum)
 }
 
 fn get_fuel_for_module(mass: u64) -> u64 {

@@ -1,19 +1,19 @@
 use std::str::FromStr;
 
-pub fn step1(input: &str) {
+pub fn step1(input: &str) -> String {
     let mut intcode = IntCode::from_str(input);
     intcode.set_at(1, 12);
     intcode.set_at(2, 2);
     intcode.run();
 
-    println!("{}", intcode.get_at(0));
+    format!("{}", intcode.get_at(0))
 }
 
 const TARGET: usize = 19_690_720;
 
-pub fn step2(input: &str) {
+pub fn step2(input: &str) -> String {
     let base = IntCode::from_str(input);
-    'outer: for noun in 0..=99 {
+    for noun in 0..=99 {
         for verb in 0..=99 {
             let mut intcode = base.clone();
             intcode.set_at(1, noun);
@@ -21,11 +21,21 @@ pub fn step2(input: &str) {
             intcode.run();
 
             if intcode.get_at(0) == TARGET {
-                println!("100 * {} + {} = {}", noun, verb, 100 * noun + verb);
-                break 'outer;
+                return format!("100 * {} + {} = {}", noun, verb, 100 * noun + verb);
             }
         }
     }
+    panic!("Not found");
+}
+
+#[test]
+fn test_incode() {
+    let mut prog1 = IntCode::from_str("1,0,0,0,99");
+    prog1.run();
+    assert_eq!(2, prog1.get_at(0));
+    let mut prog2 = IntCode::from_str("1,1,1,4,99,5,6,0,99");
+    prog2.run();
+    assert_eq!(30, prog2.get_at(0));
 }
 
 #[derive(Debug, Clone)]

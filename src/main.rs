@@ -61,10 +61,10 @@ fn main() {
     let input = &read_to_string(filename).unwrap();
 
     match (day, step) {
-        (1, 1) => day1::step1(input),
-        (1, 2) => day1::step2(input),
-        (2, 1) => day2::step1(input),
-        (2, 2) => day2::step2(input),
+        (1, 1) => println!("{}", day1::step1(input)),
+        (1, 2) => println!("{}", day1::step2(input)),
+        (2, 1) => println!("{}", day2::step1(input)),
+        (2, 2) => println!("{}", day2::step2(input)),
         (3, 1) => day3::step1(input),
         (3, 2) => day3::step2(input),
         (4, 1) => day4::step1(input),
