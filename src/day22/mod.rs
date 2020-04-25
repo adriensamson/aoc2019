@@ -1,13 +1,13 @@
-use std::str::FromStr;
 use regex::Regex;
+use std::str::FromStr;
 
-lazy_static!{
-    static ref NEW_STACK_RE : Regex = Regex::new("deal into new stack").unwrap();
-    static ref CUT_RE : Regex = Regex::new("cut (-?\\d+)").unwrap();
-    static ref DEAL_INCR_RE : Regex = Regex::new("deal with increment (\\d+)").unwrap();
+lazy_static! {
+    static ref NEW_STACK_RE: Regex = Regex::new("deal into new stack").unwrap();
+    static ref CUT_RE: Regex = Regex::new("cut (-?\\d+)").unwrap();
+    static ref DEAL_INCR_RE: Regex = Regex::new("deal with increment (\\d+)").unwrap();
 }
 
-pub fn step1(input : &str) {
+pub fn step1(input: &str) {
     let mut deck = Deck::new(10_007);
     for line in input.trim().lines() {
         match Action::from_str(line) {
@@ -16,12 +16,20 @@ pub fn step1(input : &str) {
             Action::DealIncr(n) => deck.deal_with_incr(n),
         }
     }
-    println!("{}", deck.0.iter().enumerate().find_map(|(i, &c)| if c == 2019 { Some(i) } else { None }).unwrap());
+    println!(
+        "{}",
+        deck.0
+            .iter()
+            .enumerate()
+            .find_map(|(i, &c)| if c == 2019 { Some(i) } else { None })
+            .unwrap()
+    );
 }
-pub fn step2(input : &str) {
+pub fn step2(input: &str) {
     let size = 119315717514047;
 
-    let mut axpb = input.trim()
+    let mut axpb = input
+        .trim()
         .lines()
         .map(|line| match Action::from_str(line) {
             Action::NewStack => Axpb::new_stack(size),
@@ -68,7 +76,7 @@ impl Action {
 struct Deck(Vec<usize>);
 
 impl Deck {
-    fn new(size : usize) -> Deck {
+    fn new(size: usize) -> Deck {
         let vec = (0..size).into_iter().collect();
         Deck(vec)
     }
@@ -77,7 +85,7 @@ impl Deck {
         self.0.reverse();
     }
 
-    fn cut(&mut self, n : i64) {
+    fn cut(&mut self, n: i64) {
         let n2 = if n >= 0 {
             n as usize
         } else {
@@ -89,7 +97,7 @@ impl Deck {
         self.0 = new;
     }
 
-    fn deal_with_incr(&mut self, n : usize) {
+    fn deal_with_incr(&mut self, n: usize) {
         let len = self.0.len();
         let mut new = vec![0; len];
         for (i, c) in self.0.iter().enumerate() {
@@ -101,53 +109,44 @@ impl Deck {
 
 #[derive(Clone)]
 struct Axpb {
-    a : i128,
-    b : i128,
+    a: i128,
+    b: i128,
 }
 
 impl Axpb {
     fn ident() -> Axpb {
-        Axpb {
-            a: 1,
-            b: 0,
-        }
+        Axpb { a: 1, b: 0 }
     }
 
-    fn new_stack(size : usize) -> Axpb {
+    fn new_stack(size: usize) -> Axpb {
         Axpb {
             a: -1,
             b: (size - 1) as i128,
         }
     }
 
-    fn cut(n : i64, size : usize) -> Axpb {
+    fn cut(n: i64, size: usize) -> Axpb {
         let n2 = if n >= 0 {
             n as i128
         } else {
             size as i128 + n as i128
         };
-        Axpb {
-            a: 1,
-            b: -n2
-        }
+        Axpb { a: 1, b: -n2 }
     }
 
-    fn deal_incr(n : usize) -> Axpb {
-        Axpb {
-            a: n as i128,
-            b: 0,
-        }
+    fn deal_incr(n: usize) -> Axpb {
+        Axpb { a: n as i128, b: 0 }
     }
 
-    fn combine(&self, rhs: &Self, size : usize) -> Axpb {
+    fn combine(&self, rhs: &Self, size: usize) -> Axpb {
         // a2 * (a1 * x + b1) + b2 = (a1 * a2) * x + (a2 * b1 + b2)
         Axpb {
             a: (self.a * rhs.a) % size as i128,
-            b: (rhs.a * self.b + rhs.b) % size as i128
+            b: (rhs.a * self.b + rhs.b) % size as i128,
         }
     }
 
-    fn inverse(&self, pos : usize, size : usize) -> usize {
+    fn inverse(&self, pos: usize, size: usize) -> usize {
         let size_i128 = size as i128;
         // ax + b = pos
         // ax = pos - b
@@ -165,7 +164,7 @@ impl Axpb {
     }
 }
 
-fn norm_mod(a : &i128, size : &i128) -> i128 {
+fn norm_mod(a: &i128, size: &i128) -> i128 {
     let m = a % size;
     if m >= 0 {
         m
@@ -188,12 +187,14 @@ deal with increment 9
 deal with increment 3
 cut -1";
 
-    let actions : Vec<Action> = input.trim()
+    let actions: Vec<Action> = input
+        .trim()
         .lines()
         .map(|line| Action::from_str(line))
         .collect();
 
-    let mut axpb = actions.iter()
+    let mut axpb = actions
+        .iter()
         .map(|a| match a {
             Action::NewStack => Axpb::new_stack(size),
             Action::Cut(n) => Axpb::cut(*n, size),

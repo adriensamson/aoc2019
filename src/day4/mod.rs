@@ -1,10 +1,10 @@
-use std::str::FromStr;
-use std::cmp::PartialOrd;
 use std::cmp::Ordering;
-use std::fmt::Formatter;
+use std::cmp::PartialOrd;
 use std::fmt::Error;
+use std::fmt::Formatter;
+use std::str::FromStr;
 
-pub fn step1(input : &str) {
+pub fn step1(input: &str) {
     let (min, max) = parse_range(input);
     let mut current = min;
     let mut nb = 0;
@@ -17,7 +17,7 @@ pub fn step1(input : &str) {
     println!("{}", nb);
 }
 
-pub fn step2(input : &str) {
+pub fn step2(input: &str) {
     let (min, max) = parse_range(input);
     let mut current = min;
     let mut nb = 0;
@@ -30,23 +30,23 @@ pub fn step2(input : &str) {
     println!("{}", nb);
 }
 
-fn parse_range(input : &str) -> (SixDigits, SixDigits) {
-    let v : Vec<SixDigits> = input.split("-").take(2).map(SixDigits::from_str).collect();
+fn parse_range(input: &str) -> (SixDigits, SixDigits) {
+    let v: Vec<SixDigits> = input.split("-").take(2).map(SixDigits::from_str).collect();
     (v[0], v[1])
 }
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 struct SixDigits {
-    d0 : u8,
-    d1 : u8,
-    d2 : u8,
-    d3 : u8,
-    d4 : u8,
-    d5 : u8,
+    d0: u8,
+    d1: u8,
+    d2: u8,
+    d3: u8,
+    d4: u8,
+    d5: u8,
 }
 
 impl SixDigits {
-    fn from_str(s : &str) -> SixDigits {
+    fn from_str(s: &str) -> SixDigits {
         SixDigits {
             d0: u8::from_str(&s[0..1]).unwrap(),
             d1: u8::from_str(&s[1..2]).unwrap(),
@@ -110,17 +110,24 @@ impl SixDigits {
 
 impl PartialOrd for SixDigits {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.d0.cmp(&other.d0)
-            .then(self.d1.cmp(&other.d1))
-            .then(self.d2.cmp(&other.d2))
-            .then(self.d3.cmp(&other.d3))
-            .then(self.d4.cmp(&other.d4))
-            .then(self.d5.cmp(&other.d5)))
+        Some(
+            self.d0
+                .cmp(&other.d0)
+                .then(self.d1.cmp(&other.d1))
+                .then(self.d2.cmp(&other.d2))
+                .then(self.d3.cmp(&other.d3))
+                .then(self.d4.cmp(&other.d4))
+                .then(self.d5.cmp(&other.d5)),
+        )
     }
 }
 
 impl ::std::fmt::Display for SixDigits {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
-        write!(f, "{}{}{}{}{}{}", self.d0, self.d1, self.d2, self.d3, self.d4, self.d5)
+        write!(
+            f,
+            "{}{}{}{}{}{}",
+            self.d0, self.d1, self.d2, self.d3, self.d4, self.d5
+        )
     }
 }

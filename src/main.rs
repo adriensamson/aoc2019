@@ -1,26 +1,18 @@
-extern crate regex;
 extern crate core;
+extern crate regex;
 
 #[macro_use]
 extern crate lazy_static;
 
 use std::env;
-use std::str::FromStr;
 use std::fs::read_to_string;
+use std::str::FromStr;
 
 mod coord;
 mod intcode;
 mod path_finder;
 
 mod day1;
-mod day2;
-mod day3;
-mod day4;
-mod day5;
-mod day6;
-mod day7;
-mod day8;
-mod day9;
 mod day10;
 mod day11;
 mod day12;
@@ -31,23 +23,35 @@ mod day16;
 mod day17;
 mod day18;
 mod day19;
+mod day2;
 mod day20;
 mod day21;
 mod day22;
 mod day23;
 mod day24;
 mod day25;
+mod day3;
+mod day4;
+mod day5;
+mod day6;
+mod day7;
+mod day8;
+mod day9;
 
-const DEFAULT_DAY : i32 = 25;
-const DEFAULT_STEP : i32 = 1;
-const DEFAULT_FILE : &str = "input";
+const DEFAULT_DAY: i32 = 25;
+const DEFAULT_STEP: i32 = 1;
+const DEFAULT_FILE: &str = "input";
 
 fn main() {
-    let args : Vec<String> = env::args().collect();
-    let day = args.get(1). map(parse_int).unwrap_or(DEFAULT_DAY);
+    let args: Vec<String> = env::args().collect();
+    let day = args.get(1).map(parse_int).unwrap_or(DEFAULT_DAY);
     let step = args.get(2).map(parse_int).unwrap_or(DEFAULT_STEP);
 
-    let filename = format!("src/day{}/{}.txt", day, args.get(3).map(|s| s.as_ref()).unwrap_or(DEFAULT_FILE));
+    let filename = format!(
+        "src/day{}/{}.txt",
+        day,
+        args.get(3).map(|s| s.as_ref()).unwrap_or(DEFAULT_FILE)
+    );
     let input = &read_to_string(filename).unwrap();
 
     match (day, step) {
@@ -104,7 +108,6 @@ fn main() {
     }
 }
 
-
-fn parse_int(s : &String) -> i32 {
-        i32::from_str(s).unwrap()
+fn parse_int(s: &String) -> i32 {
+    i32::from_str(s).unwrap()
 }

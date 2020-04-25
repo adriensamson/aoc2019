@@ -1,14 +1,14 @@
 use crate::coord::Coord2;
 use crate::path_finder::{find_shortest_path, PathState};
 
-pub fn step1(input : &str) {
+pub fn step1(input: &str) {
     let map = Map::parse(input);
 
     let path = find_shortest_path(Path::start(&map));
 
     println!("{}", path.unwrap().distance);
 }
-pub fn step2(input : &str) {
+pub fn step2(input: &str) {
     let map = Map::parse(input);
 
     let path = find_shortest_path(LayeredPath::start(&map));
@@ -19,7 +19,7 @@ pub fn step2(input : &str) {
 struct Map(Vec<Vec<char>>);
 
 impl Map {
-    fn parse(input : &str) -> Map {
+    fn parse(input: &str) -> Map {
         let mut rows = Vec::new();
         for l in input.lines() {
             let mut row = Vec::new();
@@ -47,20 +47,32 @@ impl Map {
         None
     }
 
-    fn get_portal_name(&self, o : Coord2) -> Option<(char, char)> {
-        if let (Some(c1 @ 'A'..='Z'), Some(c2 @ 'A'..='Z')) = (self.get_at(Coord2::new(o.x + 1, o.y)), self.get_at(Coord2::new(o.x + 2, o.y))) {
+    fn get_portal_name(&self, o: Coord2) -> Option<(char, char)> {
+        if let (Some(c1 @ 'A'..='Z'), Some(c2 @ 'A'..='Z')) = (
+            self.get_at(Coord2::new(o.x + 1, o.y)),
+            self.get_at(Coord2::new(o.x + 2, o.y)),
+        ) {
             return Some((c1, c2));
         }
-        if let (Some(c1 @ 'A'..='Z'), Some(c2 @ 'A'..='Z')) = (self.get_at(Coord2::new(o.x, o.y + 1)), self.get_at(Coord2::new(o.x, o.y + 2))) {
+        if let (Some(c1 @ 'A'..='Z'), Some(c2 @ 'A'..='Z')) = (
+            self.get_at(Coord2::new(o.x, o.y + 1)),
+            self.get_at(Coord2::new(o.x, o.y + 2)),
+        ) {
             return Some((c1, c2));
         }
         if o.x >= 2 {
-            if let (Some(c1 @ 'A'..='Z'), Some(c2 @ 'A'..='Z')) = (self.get_at(Coord2::new(o.x - 2, o.y)), self.get_at(Coord2::new(o.x - 1, o.y))) {
+            if let (Some(c1 @ 'A'..='Z'), Some(c2 @ 'A'..='Z')) = (
+                self.get_at(Coord2::new(o.x - 2, o.y)),
+                self.get_at(Coord2::new(o.x - 1, o.y)),
+            ) {
                 return Some((c1, c2));
             }
         }
         if o.y >= 2 {
-            if let (Some(c1 @ 'A'..='Z'), Some(c2 @ 'A'..='Z')) = (self.get_at(Coord2::new(o.x, o.y - 2)), self.get_at(Coord2::new(o.x, o.y - 1))) {
+            if let (Some(c1 @ 'A'..='Z'), Some(c2 @ 'A'..='Z')) = (
+                self.get_at(Coord2::new(o.x, o.y - 2)),
+                self.get_at(Coord2::new(o.x, o.y - 1)),
+            ) {
                 return Some((c1, c2));
             }
         }
@@ -68,7 +80,7 @@ impl Map {
         None
     }
 
-    fn find_portal(&self, name : (char, char), from : Coord2) -> Option<Coord2> {
+    fn find_portal(&self, name: (char, char), from: Coord2) -> Option<Coord2> {
         for (y, row) in self.0.iter().enumerate() {
             for (x, ch) in row.iter().enumerate() {
                 let c1 = Coord2::new(x, y);
@@ -80,19 +92,19 @@ impl Map {
         None
     }
 
-    fn is_outer(&self, c : &Coord2) -> bool {
+    fn is_outer(&self, c: &Coord2) -> bool {
         c.y == 2 || c.x == 2 || c.y == self.0.len() - 3 || c.x == self.0[2].len() - 1
     }
 }
 
 struct Path<'a> {
-    map : &'a Map,
-    coord : Coord2,
-    distance : usize,
+    map: &'a Map,
+    coord: Coord2,
+    distance: usize,
 }
 
 impl<'a> Path<'a> {
-    fn start(map : &'a Map) -> Path<'a> {
+    fn start(map: &'a Map) -> Path<'a> {
         Path {
             map,
             coord: map.get_start().unwrap(),
@@ -112,13 +124,21 @@ impl PathState for Path<'_> {
         let mut next = Vec::new();
         if let Some(portal_name) = self.map.get_portal_name(self.coord) {
             if let Some(portal_out) = self.map.find_portal(portal_name, self.coord) {
-                next.push(Path { coord: portal_out, distance: self.distance + 1, map: self.map });
+                next.push(Path {
+                    coord: portal_out,
+                    distance: self.distance + 1,
+                    map: self.map,
+                });
             }
         }
         for o in self.coord.around() {
             match self.map.get_at(o) {
                 Some('.') => {
-                    next.push(Path {coord: o, distance: self.distance + 1, map: self.map});
+                    next.push(Path {
+                        coord: o,
+                        distance: self.distance + 1,
+                        map: self.map,
+                    });
                 }
                 _ => {}
             }
@@ -143,7 +163,7 @@ struct LayeredPath<'a> {
 }
 
 impl<'a> LayeredPath<'a> {
-    fn start(map : &'a Map) -> LayeredPath<'a> {
+    fn start(map: &'a Map) -> LayeredPath<'a> {
         LayeredPath {
             map,
             coord: map.get_start().unwrap(),
@@ -166,17 +186,32 @@ impl PathState for LayeredPath<'_> {
             if let Some(portal_out) = self.map.find_portal(portal_name, self.coord) {
                 if self.map.is_outer(&self.coord) {
                     if self.layer > 0 {
-                        next.push(LayeredPath { coord: portal_out, distance: self.distance + 1, map: self.map, layer: self.layer - 1});
+                        next.push(LayeredPath {
+                            coord: portal_out,
+                            distance: self.distance + 1,
+                            map: self.map,
+                            layer: self.layer - 1,
+                        });
                     }
                 } else {
-                    next.push(LayeredPath { coord: portal_out, distance: self.distance + 1, map: self.map, layer: self.layer + 1 });
+                    next.push(LayeredPath {
+                        coord: portal_out,
+                        distance: self.distance + 1,
+                        map: self.map,
+                        layer: self.layer + 1,
+                    });
                 }
             }
         }
         for o in self.coord.around() {
             match self.map.get_at(o) {
                 Some('.') => {
-                    next.push(LayeredPath {coord: o, distance: self.distance + 1, map: self.map, layer: self.layer});
+                    next.push(LayeredPath {
+                        coord: o,
+                        distance: self.distance + 1,
+                        map: self.map,
+                        layer: self.layer,
+                    });
                 }
                 _ => {}
             }

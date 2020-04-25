@@ -2,7 +2,7 @@ use crate::intcode::{IntCode, IntCodeIo};
 use std::collections::VecDeque;
 use std::iter::FromIterator;
 
-pub fn step1(input : &str) {
+pub fn step1(input: &str) {
     let mut droid = IntCode::from_str(input, AsciiPrintIo::new());
     // (!A || !B || !C) && D
     // !(A && B && C) && D
@@ -19,7 +19,7 @@ WALK
     droid.run();
 }
 
-pub fn step2(input : &str) {
+pub fn step2(input: &str) {
     let mut droid = IntCode::from_str(input, AsciiPrintIo::new());
     // !(A && B && C) && D && (E || H)
     let instructions = "\
@@ -39,12 +39,14 @@ RUN
 }
 
 struct AsciiPrintIo {
-    input : VecDeque<i64>,
+    input: VecDeque<i64>,
 }
 
 impl AsciiPrintIo {
     fn new() -> AsciiPrintIo {
-        AsciiPrintIo {input: VecDeque::new()}
+        AsciiPrintIo {
+            input: VecDeque::new(),
+        }
     }
 }
 

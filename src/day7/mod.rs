@@ -1,8 +1,8 @@
-use crate::intcode::{IntCode, VecVecIo, RunState};
-use std::collections::VecDeque;
+use crate::intcode::{IntCode, RunState, VecVecIo};
 use std::cell::RefCell;
+use std::collections::VecDeque;
 
-pub fn step1(input : &str) {
+pub fn step1(input: &str) {
     let mut max = 0;
     let mut config = (0, 0, 0, 0, 0);
     for a in 0..5 {
@@ -35,7 +35,7 @@ pub fn step1(input : &str) {
     println!("{:?}", config);
     println!("{}", max);
 }
-pub fn step2(input : &str) {
+pub fn step2(input: &str) {
     let mut max = 0;
     let mut config = (0, 0, 0, 0, 0);
     for a in 5..10 {
@@ -69,7 +69,7 @@ pub fn step2(input : &str) {
     println!("{}", max);
 }
 
-fn run_amp(prog : &str, config : i64, input : i64) -> i64 {
+fn run_amp(prog: &str, config: i64, input: i64) -> i64 {
     let io_input = RefCell::new(VecDeque::from(vec![config, input]));
     let mut io_output = RefCell::new(VecDeque::new());
     let io = VecVecIo::new(&io_input, &io_output);
@@ -78,7 +78,7 @@ fn run_amp(prog : &str, config : i64, input : i64) -> i64 {
     io_output.get_mut().pop_front().unwrap()
 }
 
-fn run_amp_chain(prog : &str, config : (i64, i64, i64, i64, i64)) -> i64 {
+fn run_amp_chain(prog: &str, config: (i64, i64, i64, i64, i64)) -> i64 {
     let a = run_amp(prog, config.0, 0);
     let b = run_amp(prog, config.1, a);
     let c = run_amp(prog, config.2, b);
@@ -86,7 +86,7 @@ fn run_amp_chain(prog : &str, config : (i64, i64, i64, i64, i64)) -> i64 {
     run_amp(prog, config.4, d)
 }
 
-fn run_amp_chain2(prog : &str, config : (i64, i64, i64, i64, i64)) -> i64 {
+fn run_amp_chain2(prog: &str, config: (i64, i64, i64, i64, i64)) -> i64 {
     let mut input_a = RefCell::new(VecDeque::from(vec![config.0, 0]));
     let input_b = RefCell::new(VecDeque::from(vec![config.1]));
     let input_c = RefCell::new(VecDeque::from(vec![config.2]));
@@ -108,7 +108,7 @@ fn run_amp_chain2(prog : &str, config : (i64, i64, i64, i64, i64)) -> i64 {
         amp_b.run();
         amp_c.run();
         amp_d.run();
-        let status_e= amp_e.run();
+        let status_e = amp_e.run();
         if status_e == RunState::Halted {
             return input_a.get_mut().pop_back().unwrap();
         }

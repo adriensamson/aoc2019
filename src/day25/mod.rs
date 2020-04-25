@@ -1,9 +1,9 @@
-use crate::intcode::{IntCodeIo, IntCode, RunState};
-use std::io::{stdin, Stdin, Read};
+use crate::intcode::{IntCode, IntCodeIo, RunState};
+use std::io::{stdin, Read, Stdin};
 use std::thread::sleep;
 use std::time::Duration;
 
-pub fn step1(input : &str) {
+pub fn step1(input: &str) {
     let mut program = IntCode::from_str(input, Tty::create());
     loop {
         let state = program.run();

@@ -1,11 +1,11 @@
 use crate::intcode::{IntCode, IntCodeIo};
 use std::collections::HashMap;
 
-pub fn step1(input : &str) {
+pub fn step1(input: &str) {
     let mut droid = RepairDroid::create(input);
     println!("{:?}", droid.explore(0));
 }
-pub fn step2(input : &str) {
+pub fn step2(input: &str) {
     let mut droid = RepairDroid::create(input);
     droid.explore(0);
     println!("{}", droid.fill_oxygen());
@@ -45,21 +45,33 @@ impl std::ops::Neg for Direction {
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 struct Coord {
-    x : i64,
-    y : i64,
+    x: i64,
+    y: i64,
 }
 
 impl Coord {
-    fn add(&self, dir : Direction) -> Coord {
+    fn add(&self, dir: Direction) -> Coord {
         match dir {
-            Direction::North => Coord {x: self.x, y: self.y - 1},
-            Direction::South => Coord {x: self.x, y: self.y + 1},
-            Direction::West => Coord {x: self.x - 1, y: self.y},
-            Direction::East => Coord {x: self.x + 1, y: self.y},
+            Direction::North => Coord {
+                x: self.x,
+                y: self.y - 1,
+            },
+            Direction::South => Coord {
+                x: self.x,
+                y: self.y + 1,
+            },
+            Direction::West => Coord {
+                x: self.x - 1,
+                y: self.y,
+            },
+            Direction::East => Coord {
+                x: self.x + 1,
+                y: self.y,
+            },
         }
     }
 
-    fn assign_add(&mut self, dir : Direction) {
+    fn assign_add(&mut self, dir: Direction) {
         match dir {
             Direction::North => self.y -= 1,
             Direction::South => self.y += 1,
@@ -77,8 +89,8 @@ enum State {
 }
 
 struct ManualIo {
-    input : Option<i64>,
-    output : Option<i64>,
+    input: Option<i64>,
+    output: Option<i64>,
 }
 
 impl ManualIo {
@@ -103,7 +115,7 @@ impl IntCodeIo for ManualIo {
 }
 
 impl IntCode<ManualIo> {
-    fn set_input(&mut self, val : i64) {
+    fn set_input(&mut self, val: i64) {
         self.io.input = Some(val);
     }
 
@@ -113,34 +125,34 @@ impl IntCode<ManualIo> {
 }
 
 struct RepairDroid {
-    program : IntCode<ManualIo>,
-    position : Coord,
-    map : HashMap<Coord, State>
+    program: IntCode<ManualIo>,
+    position: Coord,
+    map: HashMap<Coord, State>,
 }
 
 impl RepairDroid {
-    fn create(s : &str) -> RepairDroid {
+    fn create(s: &str) -> RepairDroid {
         let program = IntCode::from_str(s, ManualIo::new());
         RepairDroid {
             program,
-            position: Coord {x: 0, y: 0},
+            position: Coord { x: 0, y: 0 },
             map: HashMap::new(),
         }
     }
 
-    fn try_move(&mut self, dir : Direction) -> bool {
+    fn try_move(&mut self, dir: Direction) -> bool {
         self.program.set_input(dir.to_i64());
         self.program.run();
         match self.program.get_output().unwrap() {
             0 => {
                 self.map.insert(self.position.add(dir), State::Wall);
                 false
-            },
+            }
             1 => {
                 self.position.assign_add(dir);
                 self.map.insert(self.position, State::Empty);
                 true
-            },
+            }
             2 => {
                 self.position.assign_add(dir);
                 self.map.insert(self.position, State::Oxygen);
@@ -150,12 +162,17 @@ impl RepairDroid {
         }
     }
 
-    fn is_explored(&self, dir : Direction) -> bool {
+    fn is_explored(&self, dir: Direction) -> bool {
         self.map.contains_key(&self.position.add(dir))
     }
 
-    fn explore(&mut self, depth : usize) -> Option<usize> {
-        let dirs = vec![Direction::North, Direction::West, Direction::South, Direction::East];
+    fn explore(&mut self, depth: usize) -> Option<usize> {
+        let dirs = vec![
+            Direction::North,
+            Direction::West,
+            Direction::South,
+            Direction::East,
+        ];
         dirs.iter()
             .filter_map(|&dir| {
                 if self.is_explored(dir) {
@@ -165,7 +182,11 @@ impl RepairDroid {
                     let found = *self.map.get(&self.position).unwrap() == State::Oxygen;
                     let d = self.explore(depth + 1);
                     self.try_move(-dir);
-                    if found { Some(depth + 1) } else { d }
+                    if found {
+                        Some(depth + 1)
+                    } else {
+                        d
+                    }
                 } else {
                     None
                 }
@@ -174,12 +195,19 @@ impl RepairDroid {
     }
 
     fn fill_oxygen(&mut self) -> usize {
-        let dirs = vec![Direction::North, Direction::West, Direction::South, Direction::East];
+        let dirs = vec![
+            Direction::North,
+            Direction::West,
+            Direction::South,
+            Direction::East,
+        ];
         let mut nstep = 0usize;
         loop {
-            let to_fill : Vec<Coord> = self.map.iter()
+            let to_fill: Vec<Coord> = self
+                .map
+                .iter()
                 .filter(|(_, &s)| s == State::Oxygen)
-                .flat_map(|(c, _)| dirs.iter().map(move | dir | c.add(*dir)))
+                .flat_map(|(c, _)| dirs.iter().map(move |dir| c.add(*dir)))
                 .filter(|c| self.map.get(c) == Some(&State::Empty))
                 .collect();
             if to_fill.len() == 0 {
@@ -201,13 +229,13 @@ impl std::fmt::Display for RepairDroid {
         let max_y = self.map.keys().map(|c| c.y).max().unwrap();
         for y in min_y..=max_y {
             for x in min_x..=max_x {
-                match self.map.get(&Coord {x, y}) {
+                match self.map.get(&Coord { x, y }) {
                     None => write!(f, "?")?,
                     Some(s) => match s {
                         State::Wall => write!(f, "#")?,
                         State::Empty => write!(f, " ")?,
                         State::Oxygen => write!(f, "O")?,
-                    }
+                    },
                 }
             }
             write!(f, "\n")?;

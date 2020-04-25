@@ -1,20 +1,20 @@
-use regex::Regex;
-use std::str::FromStr;
-use std::collections::HashMap;
 use num::integer::lcm;
+use regex::Regex;
+use std::collections::HashMap;
+use std::str::FromStr;
 
-pub fn step1(input : &str) {
+pub fn step1(input: &str) {
     let mut space = Space::from_str(input);
     for _i in 0..1000 {
         space.step_time();
     }
     println!("{}", space.get_total_energy());
 }
-pub fn step2(input : &str) {
+pub fn step2(input: &str) {
     let mut space = Space::from_str(input);
-    let mut x_states : HashMap<Vec<(i64, i64)>, usize> = HashMap::new();
-    let mut y_states : HashMap<Vec<(i64, i64)>, usize> = HashMap::new();
-    let mut z_states : HashMap<Vec<(i64, i64)>, usize> = HashMap::new();
+    let mut x_states: HashMap<Vec<(i64, i64)>, usize> = HashMap::new();
+    let mut y_states: HashMap<Vec<(i64, i64)>, usize> = HashMap::new();
+    let mut z_states: HashMap<Vec<(i64, i64)>, usize> = HashMap::new();
     let mut x_loop = None;
     let mut y_loop = None;
     let mut z_loop = None;
@@ -25,16 +25,20 @@ pub fn step2(input : &str) {
         let (x, y, z) = space.get_states();
         if x_loop == None {
             match x_states.get(&x) {
-                None => {x_states.insert(x, i);},
+                None => {
+                    x_states.insert(x, i);
+                }
                 Some(j) => {
                     x_loop = Some((i - *j, *j));
                     println!("X loops every {} after {}", i - *j, *j);
-                },
+                }
             }
         }
         if y_loop == None {
             match y_states.get(&y) {
-                None => {y_states.insert(y, i);},
+                None => {
+                    y_states.insert(y, i);
+                }
                 Some(j) => {
                     y_loop = Some((i - *j, *j));
                     println!("Y loops every {} after {}", i - *j, *j);
@@ -43,7 +47,9 @@ pub fn step2(input : &str) {
         }
         if z_loop == None {
             match z_states.get(&z) {
-                None => {z_states.insert(z, i);},
+                None => {
+                    z_states.insert(z, i);
+                }
                 Some(j) => {
                     z_loop = Some((i - *j, *j));
                     println!("Z loops every {} after {}", i - *j, *j);
@@ -62,17 +68,35 @@ pub fn step2(input : &str) {
 
 #[derive(Debug, Copy, Clone)]
 struct Vector {
-    x : i64,
-    y : i64,
-    z : i64,
+    x: i64,
+    y: i64,
+    z: i64,
 }
 
 impl Vector {
-    fn compute_gravity(&self, other : &Self) -> Vector {
+    fn compute_gravity(&self, other: &Self) -> Vector {
         Vector {
-            x: if self.x < other.x { 1 } else if self.x > other.x { -1 } else { 0 },
-            y: if self.y < other.y { 1 } else if self.y > other.y { -1 } else { 0 },
-            z: if self.z < other.z { 1 } else if self.z > other.z { -1 } else { 0 },
+            x: if self.x < other.x {
+                1
+            } else if self.x > other.x {
+                -1
+            } else {
+                0
+            },
+            y: if self.y < other.y {
+                1
+            } else if self.y > other.y {
+                -1
+            } else {
+                0
+            },
+            z: if self.z < other.z {
+                1
+            } else if self.z > other.z {
+                -1
+            } else {
+                0
+            },
         }
     }
 
@@ -102,25 +126,24 @@ impl ::std::ops::AddAssign for Vector {
 }
 
 struct Moon {
-    position : Vector,
-    velocity : Vector,
+    position: Vector,
+    velocity: Vector,
 }
 
-
 impl Moon {
-    fn from_str(s : &str) -> Option<Moon> {
-        let input_re= Regex::new("<x=(-?\\d+), y=(-?\\d+), z=(-?\\d+)>").unwrap();
+    fn from_str(s: &str) -> Option<Moon> {
+        let input_re = Regex::new("<x=(-?\\d+), y=(-?\\d+), z=(-?\\d+)>").unwrap();
         input_re.captures(s).map(|cap| Moon {
             position: Vector {
                 x: i64::from_str(&cap[1]).unwrap(),
                 y: i64::from_str(&cap[2]).unwrap(),
                 z: i64::from_str(&cap[3]).unwrap(),
             },
-            velocity: Vector {x: 0, y: 0, z: 0},
+            velocity: Vector { x: 0, y: 0, z: 0 },
         })
     }
 
-    fn add_gravity(&mut self, gravity : Vector) {
+    fn add_gravity(&mut self, gravity: Vector) {
         self.velocity += gravity;
     }
 
@@ -128,7 +151,7 @@ impl Moon {
         self.position += self.velocity;
     }
 
-    fn compute_gravity(&self, other : &Self) -> Vector {
+    fn compute_gravity(&self, other: &Self) -> Vector {
         self.position.compute_gravity(&other.position)
     }
 
@@ -138,12 +161,16 @@ impl Moon {
 }
 
 struct Space {
-    moons : Vec<Moon>,
+    moons: Vec<Moon>,
 }
 
 impl Space {
-    fn from_str(s : &str) -> Space {
-        let moons : Vec<Moon> = s.trim().lines().map(|s| Moon::from_str(s).unwrap()).collect();
+    fn from_str(s: &str) -> Space {
+        let moons: Vec<Moon> = s
+            .trim()
+            .lines()
+            .map(|s| Moon::from_str(s).unwrap())
+            .collect();
         Space { moons }
     }
 
@@ -155,7 +182,7 @@ impl Space {
     fn apply_gravity(&mut self) {
         let n = self.moons.len();
         for i in 0..n {
-            for j in i+1..n {
+            for j in i + 1..n {
                 let moon1 = &self.moons[i];
                 let moon2 = &self.moons[j];
                 let gravity = moon1.compute_gravity(&moon2);

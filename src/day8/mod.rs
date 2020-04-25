@@ -1,11 +1,14 @@
 use std::fmt::{Display, Error, Formatter};
 
-pub fn step1(input : &str) {
+pub fn step1(input: &str) {
     let layers = parse_img(input, 25, 6);
     let min0layer = layers.iter().min_by_key(|l| l.count_char(&'0')).unwrap();
-    println!("{}", min0layer.count_char(&'1') * min0layer.count_char(&'2'));
+    println!(
+        "{}",
+        min0layer.count_char(&'1') * min0layer.count_char(&'2')
+    );
 }
-pub fn step2(input : &str) {
+pub fn step2(input: &str) {
     let layers = parse_img(input, 25, 6);
     let final_img = merge_layers(&layers);
     println!("{}", final_img);
@@ -17,8 +20,11 @@ struct Layer {
 }
 
 impl Layer {
-    fn count_char(&self, c : &char) -> usize {
-        self.rows.iter().map(|row| row.iter().filter(|&c0| c0 == c).count()).sum()
+    fn count_char(&self, c: &char) -> usize {
+        self.rows
+            .iter()
+            .map(|row| row.iter().filter(|&c0| c0 == c).count())
+            .sum()
     }
 }
 
@@ -39,7 +45,7 @@ impl Display for Layer {
     }
 }
 
-fn parse_img(input : &str, w : usize, h : usize) -> Vec<Layer> {
+fn parse_img(input: &str, w: usize, h: usize) -> Vec<Layer> {
     let mut current_row = Vec::new();
     let mut current_layer_rows = Vec::new();
     let mut layers = Vec::new();
@@ -52,7 +58,9 @@ fn parse_img(input : &str, w : usize, h : usize) -> Vec<Layer> {
             current_row = Vec::new();
         }
         if current_layer_rows.len() == h {
-            layers.push(Layer {rows: current_layer_rows});
+            layers.push(Layer {
+                rows: current_layer_rows,
+            });
             current_layer_rows = Vec::new();
         }
     }
@@ -60,7 +68,7 @@ fn parse_img(input : &str, w : usize, h : usize) -> Vec<Layer> {
     layers
 }
 
-fn merge_layers(layers : &Vec<Layer>) -> Layer {
+fn merge_layers(layers: &Vec<Layer>) -> Layer {
     let mut dest = layers[0].clone();
     for i in 0..dest.rows.len() {
         for j in 0..dest.rows[0].len() {

@@ -1,19 +1,24 @@
+use crate::intcode::{IntCode, IntCodeIo};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;
-use std::cell::RefCell;
-use crate::intcode::{IntCodeIo, IntCode};
 
-pub fn step1(input : &str) {
+pub fn step1(input: &str) {
     let screen = RefCell::new(Screen::new());
     let mut program = IntCode::from_str(input, ScreenIo::new(&screen));
     program.run();
     println!("{}", screen.borrow());
 
-    let nb_block = screen.borrow().tiles.values().filter(|&&t| t == Tile::Block).count();
+    let nb_block = screen
+        .borrow()
+        .tiles
+        .values()
+        .filter(|&&t| t == Tile::Block)
+        .count();
     println!("{}", nb_block);
 }
 
-pub fn step2(input : &str) {
+pub fn step2(input: &str) {
     let screen = RefCell::new(Screen::new());
     let mut program = IntCode::from_str(input, ScreenIo::new(&screen));
     program.set_at(0, 2);
@@ -42,7 +47,7 @@ impl Tile {
         }
     }
 
-    fn from_i64(val : i64) -> Tile {
+    fn from_i64(val: i64) -> Tile {
         match val {
             0 => Tile::Empty,
             1 => Tile::Wall,
@@ -55,27 +60,27 @@ impl Tile {
 }
 
 struct Screen {
-    tiles : HashMap<(i64, i64), Tile>,
-    score : i64,
+    tiles: HashMap<(i64, i64), Tile>,
+    score: i64,
 }
 
 impl Screen {
     fn new() -> Screen {
         Screen {
-            tiles : HashMap::new(),
-            score : 0,
+            tiles: HashMap::new(),
+            score: 0,
         }
     }
 
-    fn get(&self, x : i64, y : i64) -> Tile {
+    fn get(&self, x: i64, y: i64) -> Tile {
         *self.tiles.get(&(x, y)).unwrap_or(&Tile::Empty)
     }
 
-    fn set(&mut self, x : i64, y : i64, val : Tile) {
+    fn set(&mut self, x: i64, y: i64, val: Tile) {
         self.tiles.insert((x, y), val);
     }
 
-    fn set_score(&mut self, val : i64) {
+    fn set_score(&mut self, val: i64) {
         self.score = val;
     }
 
@@ -108,23 +113,35 @@ enum OutputState {
 }
 
 struct ScreenIo<'a> {
-    screen : &'a RefCell<Screen>,
-    output_state : OutputState,
+    screen: &'a RefCell<Screen>,
+    output_state: OutputState,
 }
 
 impl<'a> ScreenIo<'a> {
-    fn new(screen : &'a RefCell<Screen>) -> ScreenIo {
+    fn new(screen: &'a RefCell<Screen>) -> ScreenIo {
         ScreenIo {
             screen,
-            output_state : OutputState::Empty,
+            output_state: OutputState::Empty,
         }
     }
 }
 
 impl<'a> IntCodeIo for ScreenIo<'a> {
     fn input(&mut self) -> Option<i64> {
-        let x_paddle = self.screen.borrow().tiles.iter().find(|(_, t)| **t == Tile::HPaddle).map(|(xy, _)| xy.0);
-        let x_ball = self.screen.borrow().tiles.iter().find(|(_, t)| **t == Tile::Ball).map(|(xy, _)| xy.0);
+        let x_paddle = self
+            .screen
+            .borrow()
+            .tiles
+            .iter()
+            .find(|(_, t)| **t == Tile::HPaddle)
+            .map(|(xy, _)| xy.0);
+        let x_ball = self
+            .screen
+            .borrow()
+            .tiles
+            .iter()
+            .find(|(_, t)| **t == Tile::Ball)
+            .map(|(xy, _)| xy.0);
         match (x_paddle, x_ball) {
             (Some(p), Some(b)) => {
                 if p < b {
@@ -134,7 +151,7 @@ impl<'a> IntCodeIo for ScreenIo<'a> {
                 } else {
                     Some(0)
                 }
-            },
+            }
             _ => None,
         }
     }
@@ -143,10 +160,10 @@ impl<'a> IntCodeIo for ScreenIo<'a> {
         match self.output_state {
             OutputState::Empty => {
                 self.output_state = OutputState::X(val);
-            },
+            }
             OutputState::X(x) => {
                 self.output_state = OutputState::XY(x, val);
-            },
+            }
             OutputState::XY(x, y) => {
                 if x == -1 && y == 0 {
                     self.screen.borrow_mut().set_score(val);
@@ -154,7 +171,7 @@ impl<'a> IntCodeIo for ScreenIo<'a> {
                     self.screen.borrow_mut().set(x, y, Tile::from_i64(val));
                 }
                 self.output_state = OutputState::Empty;
-            },
+            }
         }
     }
 }

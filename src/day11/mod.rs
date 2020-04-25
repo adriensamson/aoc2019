@@ -1,9 +1,9 @@
-use std::collections::HashMap;
 use crate::intcode::{IntCode, IntCodeIo};
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::fmt;
 
-pub fn step1(input : &str) {
+pub fn step1(input: &str) {
     let robot = RefCell::new(Robot::new());
     let io = RobotIo::new(&robot);
     let mut program = IntCode::from_str(input, io);
@@ -11,7 +11,7 @@ pub fn step1(input : &str) {
     println!("{}", robot.borrow().count_painted_panels());
 }
 
-pub fn step2(input : &str) {
+pub fn step2(input: &str) {
     let robot = RefCell::new(Robot::new());
     robot.borrow_mut().set_color(true);
     let io = RobotIo::new(&robot);
@@ -50,17 +50,17 @@ impl Direction {
 
 #[derive(Hash, PartialEq, Eq, Copy, Clone)]
 struct Coord {
-    x : i64,
-    y : i64,
+    x: i64,
+    y: i64,
 }
 
 impl Coord {
-    fn move_in_direction(&mut self, direction : Direction) {
+    fn move_in_direction(&mut self, direction: Direction) {
         match direction {
-            Direction::Up => { self.y -= 1 },
-            Direction::Right => { self.x += 1 },
-            Direction::Down => { self.y += 1 },
-            Direction::Left => { self.x -= 1 },
+            Direction::Up => self.y -= 1,
+            Direction::Right => self.x += 1,
+            Direction::Down => self.y += 1,
+            Direction::Left => self.x -= 1,
         }
     }
 }
@@ -68,15 +68,15 @@ impl Coord {
 struct Robot {
     panels: HashMap<Coord, bool>,
     position: Coord,
-    direction : Direction,
+    direction: Direction,
 }
 
 impl Robot {
     fn new() -> Robot {
         Robot {
             panels: HashMap::new(),
-            position : Coord {x: 0, y: 0},
-            direction : Direction::Up,
+            position: Coord { x: 0, y: 0 },
+            direction: Direction::Up,
         }
     }
 
@@ -88,11 +88,11 @@ impl Robot {
         *self.panels.get(&self.position).unwrap_or(&false)
     }
 
-    fn set_color(&mut self, color : bool) {
+    fn set_color(&mut self, color: bool) {
         self.panels.insert(self.position, color);
     }
 
-    fn turn_and_move(&mut self, right : bool) {
+    fn turn_and_move(&mut self, right: bool) {
         if right {
             self.direction = self.direction.turn_right();
         } else {
@@ -111,7 +111,15 @@ impl fmt::Display for Robot {
 
         for y in min_y..=max_y {
             for x in min_x..=max_x {
-                write!(f, "{}", if *self.panels.get(&Coord {x, y}).unwrap_or(&false) { "#" } else { " " })?
+                write!(
+                    f,
+                    "{}",
+                    if *self.panels.get(&Coord { x, y }).unwrap_or(&false) {
+                        "#"
+                    } else {
+                        " "
+                    }
+                )?
             }
             write!(f, "\n")?
         }
@@ -125,12 +133,12 @@ enum NextOutput {
 }
 
 struct RobotIo<'a> {
-    robot : &'a RefCell<Robot>,
-    next_output : NextOutput,
+    robot: &'a RefCell<Robot>,
+    next_output: NextOutput,
 }
 
 impl<'a> RobotIo<'a> {
-    fn new(robot : &'a RefCell<Robot>) -> RobotIo<'a> {
+    fn new(robot: &'a RefCell<Robot>) -> RobotIo<'a> {
         RobotIo {
             robot,
             next_output: NextOutput::Color,
@@ -140,7 +148,11 @@ impl<'a> RobotIo<'a> {
 
 impl<'a> IntCodeIo for RobotIo<'a> {
     fn input(&mut self) -> Option<i64> {
-        Some(if self.robot.borrow().get_color() { 1 } else { 0 })
+        Some(if self.robot.borrow().get_color() {
+            1
+        } else {
+            0
+        })
     }
 
     fn output(&mut self, val: i64) {
@@ -148,11 +160,11 @@ impl<'a> IntCodeIo for RobotIo<'a> {
             NextOutput::Color => {
                 self.robot.borrow_mut().set_color(val == 1);
                 self.next_output = NextOutput::Turn;
-            },
+            }
             NextOutput::Turn => {
                 self.robot.borrow_mut().turn_and_move(val == 1);
                 self.next_output = NextOutput::Color;
-            },
+            }
         }
     }
 }

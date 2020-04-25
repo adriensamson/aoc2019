@@ -1,12 +1,20 @@
-use std::collections::VecDeque;
+use crate::intcode::{IntCode, IntCodeIo};
 use std::cell::RefCell;
-use crate::intcode::{IntCodeIo, IntCode};
+use std::collections::VecDeque;
 use std::rc::Rc;
 
-pub fn step1(input : &str) {
+pub fn step1(input: &str) {
     let controller = Part1NetworkController::new(50);
-    let mut computers : Vec<IntCode<ComputerInterface>> = controller.borrow().interfaces.iter()
-        .map(|i| IntCode::from_str(input, ComputerInterface::new(controller.clone(), i.borrow().address)))
+    let mut computers: Vec<IntCode<ComputerInterface>> = controller
+        .borrow()
+        .interfaces
+        .iter()
+        .map(|i| {
+            IntCode::from_str(
+                input,
+                ComputerInterface::new(controller.clone(), i.borrow().address),
+            )
+        })
         .collect();
 
     while !controller.borrow().exit {
@@ -16,10 +24,18 @@ pub fn step1(input : &str) {
     }
 }
 
-pub fn step2(input : &str) {
+pub fn step2(input: &str) {
     let controller = Part2NetworkController::new(50);
-    let mut computers : Vec<IntCode<ComputerInterface>> = controller.borrow().interfaces.iter()
-        .map(|(_, i)| IntCode::from_str(input, ComputerInterface::new(controller.clone(), i.borrow().address)))
+    let mut computers: Vec<IntCode<ComputerInterface>> = controller
+        .borrow()
+        .interfaces
+        .iter()
+        .map(|(_, i)| {
+            IntCode::from_str(
+                input,
+                ComputerInterface::new(controller.clone(), i.borrow().address),
+            )
+        })
         .collect();
 
     while !controller.borrow().exit {
@@ -30,12 +46,12 @@ pub fn step2(input : &str) {
 }
 
 struct NetworkInterface {
-    address : usize,
-    queue : VecDeque<(i64, i64)>,
+    address: usize,
+    queue: VecDeque<(i64, i64)>,
 }
 
 impl NetworkInterface {
-    fn new(address : usize) -> NetworkInterface {
+    fn new(address: usize) -> NetworkInterface {
         NetworkInterface {
             address,
             queue: VecDeque::new(),
@@ -44,20 +60,25 @@ impl NetworkInterface {
 }
 
 trait NetworkController {
-    fn get_packet(&mut self, address : usize) -> Option<(i64, i64)>;
-    fn send_packet(&mut self, from : usize, to : usize, packet : (i64, i64));
+    fn get_packet(&mut self, address: usize) -> Option<(i64, i64)>;
+    fn send_packet(&mut self, from: usize, to: usize, packet: (i64, i64));
 }
 
 struct Part1NetworkController {
     exit: bool,
-    interfaces : Vec<Rc<RefCell<NetworkInterface>>>,
+    interfaces: Vec<Rc<RefCell<NetworkInterface>>>,
 }
 
 impl Part1NetworkController {
     fn new(nb: usize) -> Rc<RefCell<Part1NetworkController>> {
-        let c = Rc::new(RefCell::new(Part1NetworkController { interfaces: Vec::new(), exit: false }));
+        let c = Rc::new(RefCell::new(Part1NetworkController {
+            interfaces: Vec::new(),
+            exit: false,
+        }));
         for i in 0..nb {
-            c.borrow_mut().interfaces.push(Rc::new(RefCell::new(NetworkInterface::new(i))));
+            c.borrow_mut()
+                .interfaces
+                .push(Rc::new(RefCell::new(NetworkInterface::new(i))));
         }
         c
     }
@@ -68,7 +89,7 @@ impl NetworkController for Part1NetworkController {
         self.interfaces[address].borrow_mut().queue.pop_front()
     }
 
-    fn send_packet(&mut self, _from : usize, to : usize, packet : (i64, i64)) {
+    fn send_packet(&mut self, _from: usize, to: usize, packet: (i64, i64)) {
         if to == 255 {
             println!("{}", packet.1);
             self.exit = true;
@@ -83,12 +104,12 @@ struct ComputerInterface {
     address: usize,
     address_sent: bool,
     packet_tail: Option<i64>,
-    current_output : (Option<i64>, Option<i64>),
-    interrupted : bool,
+    current_output: (Option<i64>, Option<i64>),
+    interrupted: bool,
 }
 
-impl ComputerInterface  {
-    fn new(nc : Rc<RefCell<dyn NetworkController>>, address : usize) -> ComputerInterface {
+impl ComputerInterface {
+    fn new(nc: Rc<RefCell<dyn NetworkController>>, address: usize) -> ComputerInterface {
         ComputerInterface {
             nc,
             address,
@@ -129,24 +150,26 @@ impl IntCodeIo for ComputerInterface {
         match self.current_output {
             (None, None) => {
                 self.current_output = (Some(val), None);
-            },
+            }
             (Some(_), None) => {
                 self.current_output.1 = Some(val);
-            },
+            }
             (Some(a), Some(h)) => {
                 self.current_output = (None, None);
-                self.nc.borrow_mut().send_packet(self.address, a as usize, (h, val));
+                self.nc
+                    .borrow_mut()
+                    .send_packet(self.address, a as usize, (h, val));
             }
-            _ => panic!()
+            _ => panic!(),
         }
     }
 }
 
 struct Part2NetworkController {
     exit: bool,
-    interfaces : Vec<(bool, Rc<RefCell<NetworkInterface>>)>,
-    nat : Option<(i64, i64)>,
-    last_nat_sent : Option<(i64, i64)>,
+    interfaces: Vec<(bool, Rc<RefCell<NetworkInterface>>)>,
+    nat: Option<(i64, i64)>,
+    last_nat_sent: Option<(i64, i64)>,
 }
 
 impl Part2NetworkController {
@@ -158,14 +181,19 @@ impl Part2NetworkController {
             last_nat_sent: None,
         }));
         for i in 0..nb {
-            c.borrow_mut().interfaces.push((false, Rc::new(RefCell::new(NetworkInterface::new( i)))));
+            c.borrow_mut()
+                .interfaces
+                .push((false, Rc::new(RefCell::new(NetworkInterface::new(i)))));
         }
         c
     }
 
     fn check_send_nat(&mut self) {
         if let Some(nat) = self.nat {
-            if self.interfaces.iter().all(|(w, ni)| *w && ni.borrow().queue.len() == 0)
+            if self
+                .interfaces
+                .iter()
+                .all(|(w, ni)| *w && ni.borrow().queue.len() == 0)
             {
                 if self.last_nat_sent != None && nat.1 == self.last_nat_sent.unwrap().1 {
                     println!("{}", self.nat.unwrap().1);
@@ -174,7 +202,11 @@ impl Part2NetworkController {
                 }
                 self.last_nat_sent = self.nat;
                 self.interfaces[0].0 = false;
-                self.interfaces[0].1.borrow_mut().queue.push_back(self.nat.unwrap());
+                self.interfaces[0]
+                    .1
+                    .borrow_mut()
+                    .queue
+                    .push_back(self.nat.unwrap());
             }
         }
     }
@@ -188,7 +220,7 @@ impl NetworkController for Part2NetworkController {
         p
     }
 
-    fn send_packet(&mut self, from : usize, to : usize, packet : (i64, i64)) {
+    fn send_packet(&mut self, from: usize, to: usize, packet: (i64, i64)) {
         self.interfaces[from].0 = false;
         if to == 255 {
             self.nat = Some(packet);

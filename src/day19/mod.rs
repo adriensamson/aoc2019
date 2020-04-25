@@ -1,7 +1,7 @@
 use crate::intcode::{IntCode, IntCodeIo};
 use std::collections::VecDeque;
 
-pub fn step1(input : &str) {
+pub fn step1(input: &str) {
     let beam_program = BeamProgram::new(input);
     let mut n = 0;
     for y in 0..50 {
@@ -13,7 +13,7 @@ pub fn step1(input : &str) {
     }
     println!("{}", n);
 }
-pub fn step2(input : &str) {
+pub fn step2(input: &str) {
     let beam_program = BeamProgram::new(input);
     let mut y = 50;
     let mut x = 0;
@@ -25,7 +25,7 @@ pub fn step2(input : &str) {
             let right100 = beam_program.is_tracted(x + 99, y);
             let bottom100 = beam_program.is_tracted(x, y + 99);
             match (right100, bottom100) {
-                (true, true) => { break 'y },
+                (true, true) => break 'y,
                 (false, false) => {
                     if beam_program.is_tracted(x, y + 1) {
                         y += 1;
@@ -56,16 +56,19 @@ pub fn step2(input : &str) {
 
 #[derive(Clone)]
 struct BeamIo {
-    input : VecDeque<i64>,
-    output : Option<i64>,
+    input: VecDeque<i64>,
+    output: Option<i64>,
 }
 
 impl BeamIo {
     fn new() -> BeamIo {
-        BeamIo { input: VecDeque::new(), output: None}
+        BeamIo {
+            input: VecDeque::new(),
+            output: None,
+        }
     }
 
-    fn set_coord(&mut self, x : i64, y : i64) {
+    fn set_coord(&mut self, x: i64, y: i64) {
         self.input.truncate(0);
         self.input.push_back(x);
         self.input.push_back(y);
@@ -93,13 +96,13 @@ struct BeamProgram {
 }
 
 impl BeamProgram {
-    fn new(input : &str) -> BeamProgram {
+    fn new(input: &str) -> BeamProgram {
         BeamProgram {
             base_program: IntCode::from_str(input, BeamIo::new()),
         }
     }
 
-    fn is_tracted(&self, x : i64, y : i64) -> bool {
+    fn is_tracted(&self, x: i64, y: i64) -> bool {
         let mut p = self.base_program.clone();
         p.io.set_coord(x, y);
         p.run();
