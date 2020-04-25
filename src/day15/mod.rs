@@ -20,7 +20,7 @@ enum Direction {
 }
 
 impl Direction {
-    fn to_i64(&self) -> i64 {
+    fn to_i64(self) -> i64 {
         match self {
             Direction::North => 1,
             Direction::South => 2,
@@ -210,7 +210,7 @@ impl RepairDroid {
                 .flat_map(|(c, _)| dirs.iter().map(move |dir| c.add(*dir)))
                 .filter(|c| self.map.get(c) == Some(&State::Empty))
                 .collect();
-            if to_fill.len() == 0 {
+            if to_fill.is_empty() {
                 return nstep;
             }
             for c in to_fill {
@@ -238,7 +238,7 @@ impl std::fmt::Display for RepairDroid {
                     },
                 }
             }
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
         Result::Ok(())
     }

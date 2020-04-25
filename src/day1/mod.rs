@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 pub fn step1(input: &str) {
     let mut sum = 0;
-    for line in input.lines().filter(|s| s.len() > 0) {
+    for line in input.lines().filter(|s| !s.is_empty()) {
         let mass = u64::from_str(line).unwrap();
         sum += get_fuel_for_module(mass);
     }
@@ -11,7 +11,7 @@ pub fn step1(input: &str) {
 
 pub fn step2(input: &str) {
     let mut sum = 0;
-    for line in input.lines().filter(|s| s.len() > 0) {
+    for line in input.lines().filter(|s| !s.is_empty()) {
         let mass = u64::from_str(line).unwrap();
         sum += get_total_fuel_for_module(mass);
     }

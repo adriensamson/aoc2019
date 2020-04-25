@@ -44,8 +44,14 @@ const DEFAULT_FILE: &str = "input";
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let day = args.get(1).map(parse_int).unwrap_or(DEFAULT_DAY);
-    let step = args.get(2).map(parse_int).unwrap_or(DEFAULT_STEP);
+    let day = args
+        .get(1)
+        .map(|s| parse_int(s.as_str()))
+        .unwrap_or(DEFAULT_DAY);
+    let step = args
+        .get(2)
+        .map(|s| parse_int(s.as_str()))
+        .unwrap_or(DEFAULT_STEP);
 
     let filename = format!(
         "src/day{}/{}.txt",
@@ -108,6 +114,6 @@ fn main() {
     }
 }
 
-fn parse_int(s: &String) -> i32 {
+fn parse_int(s: &str) -> i32 {
     i32::from_str(s).unwrap()
 }

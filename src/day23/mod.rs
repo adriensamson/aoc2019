@@ -129,20 +129,18 @@ impl IntCodeIo for ComputerInterface {
         } else if let Some(t) = self.packet_tail {
             self.packet_tail = None;
             Some(t)
-        } else {
-            if self.interrupted {
-                self.interrupted = false;
-                match self.nc.borrow_mut().get_packet(self.address) {
-                    None => Some(-1),
-                    Some((h, t)) => {
-                        self.packet_tail = Some(t);
-                        Some(h)
-                    }
+        } else if self.interrupted {
+            self.interrupted = false;
+            match self.nc.borrow_mut().get_packet(self.address) {
+                None => Some(-1),
+                Some((h, t)) => {
+                    self.packet_tail = Some(t);
+                    Some(h)
                 }
-            } else {
-                self.interrupted = true;
-                None
             }
+        } else {
+            self.interrupted = true;
+            None
         }
     }
 
@@ -193,7 +191,7 @@ impl Part2NetworkController {
             if self
                 .interfaces
                 .iter()
-                .all(|(w, ni)| *w && ni.borrow().queue.len() == 0)
+                .all(|(w, ni)| *w && ni.borrow().queue.is_empty())
             {
                 if self.last_nat_sent != None && nat.1 == self.last_nat_sent.unwrap().1 {
                     println!("{}", self.nat.unwrap().1);

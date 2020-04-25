@@ -43,7 +43,7 @@ impl Signal {
     fn offset(&self, offset: usize) -> Signal {
         Signal {
             offset,
-            digits: self.digits[offset..].iter().map(|i| *i).collect(),
+            digits: self.digits[offset..].iter().copied().collect(),
         }
     }
 

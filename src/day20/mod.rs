@@ -32,7 +32,7 @@ impl Map {
     }
 
     fn get_at(&self, coord: Coord2) -> Option<char> {
-        self.0.get(coord.y).and_then(|r| r.get(coord.x).map(|c| *c))
+        self.0.get(coord.y).and_then(|r| r.get(coord.x).copied())
     }
 
     fn get_start(&self) -> Option<Coord2> {
@@ -132,15 +132,12 @@ impl PathState for Path<'_> {
             }
         }
         for o in self.coord.around() {
-            match self.map.get_at(o) {
-                Some('.') => {
-                    next.push(Path {
-                        coord: o,
-                        distance: self.distance + 1,
-                        map: self.map,
-                    });
-                }
-                _ => {}
+            if let Some('.') = self.map.get_at(o) {
+                next.push(Path {
+                    coord: o,
+                    distance: self.distance + 1,
+                    map: self.map,
+                });
             }
         }
         next
@@ -204,16 +201,13 @@ impl PathState for LayeredPath<'_> {
             }
         }
         for o in self.coord.around() {
-            match self.map.get_at(o) {
-                Some('.') => {
-                    next.push(LayeredPath {
-                        coord: o,
-                        distance: self.distance + 1,
-                        map: self.map,
-                        layer: self.layer,
-                    });
-                }
-                _ => {}
+            if let Some('.') = self.map.get_at(o) {
+                next.push(LayeredPath {
+                    coord: o,
+                    distance: self.distance + 1,
+                    map: self.map,
+                    layer: self.layer,
+                });
             }
         }
         next

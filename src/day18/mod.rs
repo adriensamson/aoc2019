@@ -89,7 +89,7 @@ impl Map {
     }
 
     fn get_state_at_coord(&self, c: &Coord) -> Option<State> {
-        self.rows.get(c.y).and_then(|row| row.get(c.x)).map(|s| *s)
+        self.rows.get(c.y).and_then(|row| row.get(c.x)).copied()
     }
 
     fn get_all_keys(&self) -> HashSet<char> {
@@ -108,8 +108,8 @@ impl Map {
 trait ReachableKeys {
     fn get_reachable_nodes(&self, from: &Coord) -> Vec<(Coord, usize, State)>;
     fn get_reachable_keys(&self, from: &Coord, already: &[char]) -> Vec<(char, Coord, usize)> {
-        let mut visited = vec![from.clone()];
-        let mut current = vec![(from.clone(), 0_usize)];
+        let mut visited = vec![*from];
+        let mut current = vec![(*from, 0_usize)];
         let mut found = vec![];
         loop {
             let mut next = HashSet::new();
@@ -136,22 +136,22 @@ trait ReachableKeys {
                     }
                 }
             }
-            current = next.iter().map(|c| *c).collect();
-            if current.len() == 0 {
+            current = next.iter().copied().collect();
+            if current.is_empty() {
                 break;
             }
         }
         found
     }
 
-    fn has_all_keys(&self, keys: &Vec<char>) -> bool;
+    fn has_all_keys(&self, keys: &[char]) -> bool;
 }
 
 impl ReachableKeys for Map {
     fn get_reachable_nodes(&self, from: &Coord) -> Vec<(Coord, usize, State)> {
         let mut n = 0_usize;
-        let mut visited = vec![from.clone()];
-        let mut current = vec![from.clone()];
+        let mut visited = vec![*from];
+        let mut current = vec![*from];
         let mut found = vec![];
         loop {
             n += 1;
@@ -175,8 +175,8 @@ impl ReachableKeys for Map {
                     }
                 }
             }
-            current = next.iter().map(|c| *c).collect();
-            if current.len() == 0 {
+            current = next.iter().copied().collect();
+            if current.is_empty() {
                 break;
             }
         }
@@ -184,7 +184,7 @@ impl ReachableKeys for Map {
         found
     }
 
-    fn has_all_keys(&self, keys: &Vec<char>) -> bool {
+    fn has_all_keys(&self, keys: &[char]) -> bool {
         self.get_all_keys().len() == keys.len()
     }
 }
@@ -287,9 +287,9 @@ impl PathState for ExaminedPath4<'_> {
                 if self.current_keys[i] != '@' {
                     previous_keys.push(self.current_keys[i]);
                 }
-                let mut new_c = self.c.clone();
+                let mut new_c = self.c;
                 new_c[i] = at;
-                let mut current_keys = self.current_keys.clone();
+                let mut current_keys = self.current_keys;
                 current_keys[i] = key;
                 next.push(ExaminedPath4 {
                     map: self.map,
@@ -339,13 +339,13 @@ impl GraphMap {
                     if visited.contains(&c2) {
                         continue;
                     }
-                    edges.entry(c).or_insert(Vec::new()).push((c2, d, s2));
-                    edges.entry(c2).or_insert(Vec::new()).push((c, d, s));
+                    edges.entry(c).or_insert_with(Vec::new).push((c2, d, s2));
+                    edges.entry(c2).or_insert_with(Vec::new).push((c, d, s));
                     next.insert(c2);
                 }
             }
-            current = next.iter().map(|c| *c).collect();
-            if current.len() == 0 {
+            current = next.iter().copied().collect();
+            if current.is_empty() {
                 break;
             }
         }
@@ -363,7 +363,7 @@ impl ReachableKeys for GraphMap {
         self.edges.get(from).unwrap().to_vec()
     }
 
-    fn has_all_keys(&self, keys: &Vec<char>) -> bool {
+    fn has_all_keys(&self, keys: &[char]) -> bool {
         self.all_keys.len() == keys.len()
     }
 }

@@ -28,7 +28,10 @@ pub fn step2(input: &str) {
         }
         let vect = Vector::from_coords(station, a);
         let (dir, dist) = vect.normed_dir();
-        ast_by_dir.entry(dir).or_insert(Vec::new()).push((dist, a));
+        ast_by_dir
+            .entry(dir)
+            .or_insert_with(Vec::new)
+            .push((dist, a));
     }
     for by_angle in ast_by_dir.values_mut() {
         by_angle.sort_by_key(|ba| ba.0);

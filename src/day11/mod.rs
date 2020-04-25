@@ -29,7 +29,7 @@ enum Direction {
 }
 
 impl Direction {
-    fn turn_right(&self) -> Direction {
+    fn turn_right(self) -> Direction {
         match self {
             Direction::Up => Direction::Right,
             Direction::Right => Direction::Down,
@@ -38,7 +38,7 @@ impl Direction {
         }
     }
 
-    fn turn_left(&self) -> Direction {
+    fn turn_left(self) -> Direction {
         match self {
             Direction::Up => Direction::Left,
             Direction::Right => Direction::Up,
@@ -121,7 +121,7 @@ impl fmt::Display for Robot {
                     }
                 )?
             }
-            write!(f, "\n")?
+            writeln!(f)?
         }
         Result::Ok(())
     }

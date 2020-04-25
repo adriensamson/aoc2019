@@ -71,7 +71,7 @@ impl<Io: IntCodeIo> IntCode<Io> {
     pub fn from_str(input: &str, io: Io) -> IntCode<Io> {
         let memory = input
             .trim()
-            .split(",")
+            .split(',')
             .map(|s| i64::from_str(s).unwrap())
             .enumerate()
             .collect();
@@ -97,9 +97,7 @@ impl<Io: IntCodeIo> IntCode<Io> {
                 None
             }
             3 => match self.io.input() {
-                None => {
-                    return Some(RunState::WaitingForInput);
-                }
+                None => Some(RunState::WaitingForInput),
                 Some(val) => {
                     self.set_param(1, val);
                     self.ip += 2;

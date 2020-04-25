@@ -1,5 +1,6 @@
 use num::integer::lcm;
 use regex::Regex;
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::str::FromStr;
 
@@ -76,26 +77,20 @@ struct Vector {
 impl Vector {
     fn compute_gravity(&self, other: &Self) -> Vector {
         Vector {
-            x: if self.x < other.x {
-                1
-            } else if self.x > other.x {
-                -1
-            } else {
-                0
+            x: match self.x.cmp(&other.x) {
+                Ordering::Less => 1,
+                Ordering::Greater => -1,
+                Ordering::Equal => 0,
             },
-            y: if self.y < other.y {
-                1
-            } else if self.y > other.y {
-                -1
-            } else {
-                0
+            y: match self.y.cmp(&other.y) {
+                Ordering::Less => 1,
+                Ordering::Greater => -1,
+                Ordering::Equal => 0,
             },
-            z: if self.z < other.z {
-                1
-            } else if self.z > other.z {
-                -1
-            } else {
-                0
+            z: match self.z.cmp(&other.z) {
+                Ordering::Less => 1,
+                Ordering::Greater => -1,
+                Ordering::Equal => 0,
             },
         }
     }
@@ -164,6 +159,8 @@ struct Space {
     moons: Vec<Moon>,
 }
 
+type States = (Vec<(i64, i64)>, Vec<(i64, i64)>, Vec<(i64, i64)>);
+
 impl Space {
     fn from_str(s: &str) -> Space {
         let moons: Vec<Moon> = s
@@ -202,7 +199,7 @@ impl Space {
         self.moons.iter().map(|m| m.get_total_energy()).sum()
     }
 
-    fn get_states(&self) -> (Vec<(i64, i64)>, Vec<(i64, i64)>, Vec<(i64, i64)>) {
+    fn get_states(&self) -> States {
         let mut states = (Vec::new(), Vec::new(), Vec::new());
         for moon in &self.moons {
             states.0.push((moon.position.x, moon.velocity.x));

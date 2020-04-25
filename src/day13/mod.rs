@@ -1,5 +1,6 @@
 use crate::intcode::{IntCode, IntCodeIo};
 use std::cell::RefCell;
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -100,7 +101,7 @@ impl fmt::Display for Screen {
             for x in min_x..=max_x {
                 write!(f, "{}", self.get(x, y).as_str())?
             }
-            write!(f, "\n")?
+            writeln!(f)?
         }
         Result::Ok(())
     }
@@ -143,15 +144,11 @@ impl<'a> IntCodeIo for ScreenIo<'a> {
             .find(|(_, t)| **t == Tile::Ball)
             .map(|(xy, _)| xy.0);
         match (x_paddle, x_ball) {
-            (Some(p), Some(b)) => {
-                if p < b {
-                    Some(1)
-                } else if p > b {
-                    Some(-1)
-                } else {
-                    Some(0)
-                }
-            }
+            (Some(p), Some(b)) => Some(match p.cmp(&b) {
+                Ordering::Less => 1,
+                Ordering::Greater => -1,
+                Ordering::Equal => 0,
+            }),
             _ => None,
         }
     }

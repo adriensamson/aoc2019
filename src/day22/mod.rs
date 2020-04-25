@@ -1,8 +1,9 @@
 use regex::Regex;
 use std::str::FromStr;
 
+const NEW_STACK: &str = "deal into new stack";
+
 lazy_static! {
-    static ref NEW_STACK_RE: Regex = Regex::new("deal into new stack").unwrap();
     static ref CUT_RE: Regex = Regex::new("cut (-?\\d+)").unwrap();
     static ref DEAL_INCR_RE: Regex = Regex::new("deal with increment (\\d+)").unwrap();
 }
@@ -26,7 +27,7 @@ pub fn step1(input: &str) {
     );
 }
 pub fn step2(input: &str) {
-    let size = 119315717514047;
+    let size = 119_315_717_514_047;
 
     let mut axpb = input
         .trim()
@@ -40,7 +41,7 @@ pub fn step2(input: &str) {
 
     let mut comb_axpb = Axpb::ident();
 
-    let mut repeats = 101741582076661_usize;
+    let mut repeats = 101_741_582_076_661_usize;
     while repeats > 0 {
         if repeats % 2 == 1 {
             comb_axpb = comb_axpb.combine(&axpb, size);
@@ -60,7 +61,7 @@ enum Action {
 
 impl Action {
     fn from_str(line: &str) -> Action {
-        if let Some(_) = NEW_STACK_RE.captures(line) {
+        if line.contains(NEW_STACK) {
             return Action::NewStack;
         }
         if let Some(caps) = CUT_RE.captures(line) {
@@ -77,7 +78,7 @@ struct Deck(Vec<usize>);
 
 impl Deck {
     fn new(size: usize) -> Deck {
-        let vec = (0..size).into_iter().collect();
+        let vec = (0..size).collect();
         Deck(vec)
     }
 
@@ -193,7 +194,7 @@ cut -1";
         .map(|line| Action::from_str(line))
         .collect();
 
-    let mut axpb = actions
+    let axpb = actions
         .iter()
         .map(|a| match a {
             Action::NewStack => Axpb::new_stack(size),

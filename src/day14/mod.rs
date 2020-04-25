@@ -83,13 +83,13 @@ impl AllReactions {
         AllReactions { reactions }
     }
 
-    fn get_x_needed_for_y(&self, x: &String, y: &String, ny: usize) -> Option<usize> {
+    fn get_x_needed_for_y(&self, x: &str, y: &str, ny: usize) -> Option<usize> {
         let mut needed = HashMap::new();
         needed.insert(y, ny);
         let mut consumed = 0usize;
         let mut remaining = HashMap::new();
-        while needed.len() > 0 {
-            let el = needed.keys().take(1).last().unwrap().clone();
+        while !needed.is_empty() {
+            let el = *needed.keys().take(1).last().unwrap();
             let mut n = needed.remove(el).unwrap();
             let already = *remaining.get(el).unwrap_or(&0);
             if n < already {

@@ -9,7 +9,7 @@ pub fn step1(input: &str) {
     println!("{}", intcode.get_at(0));
 }
 
-const TARGET: usize = 19690720;
+const TARGET: usize = 19_690_720;
 
 pub fn step2(input: &str) {
     let base = IntCode::from_str(input);
@@ -37,7 +37,7 @@ struct IntCode {
 impl IntCode {
     pub fn from_str(input: &str) -> IntCode {
         let memory = input
-            .split(",")
+            .split(',')
             .map(|s| usize::from_str(s).unwrap())
             .collect();
         IntCode { memory, ip: 0 }

@@ -53,7 +53,7 @@ pub fn find_shortest_path<P: PathState>(start: P) -> Option<P> {
                 paths.push(DistWrapper(next));
             }
         }
-        if paths.len() == 0 {
+        if paths.is_empty() {
             break;
         }
         if let (Some(sp), Some(np)) = (found.peek(), paths.peek()) {

@@ -33,7 +33,7 @@ impl AsciiIo {
     }
 
     fn get_at(&self, i: usize, j: usize) -> Option<char> {
-        self.rows.get(i).and_then(|r| r.get(j).map(|c| *c))
+        self.rows.get(i).and_then(|r| r.get(j).copied())
     }
 
     fn get_at_coord(&self, c: &Coord) -> Option<char> {
@@ -45,16 +45,13 @@ impl AsciiIo {
         for i in 1..self.rows.len() - 2 {
             for j in 1..self.rows[i].len() - 1 {
                 if self.get_at(i, j) == Some('#') {
-                    match (
+                    if let (Some('#'), Some('#'), Some('#'), Some('#')) = (
                         self.get_at(i - 1, j),
                         self.get_at(i + 1, j),
                         self.get_at(i, j - 1),
                         self.get_at(i, j + 1),
                     ) {
-                        (Some('#'), Some('#'), Some('#'), Some('#')) => {
-                            sum += i * j;
-                        }
-                        _ => {}
+                        sum += i * j;
                     }
                 }
             }
@@ -141,7 +138,7 @@ impl std::fmt::Display for AsciiIo {
             for c in row {
                 write!(f, "{}", c)?
             }
-            write!(f, "\n")?
+            writeln!(f)?
         }
         Ok(())
     }
@@ -171,7 +168,7 @@ impl Direction {
         }
     }
 
-    fn right(&self) -> Direction {
+    fn right(self) -> Direction {
         match self {
             Direction::North => Direction::East,
             Direction::East => Direction::South,
@@ -180,7 +177,7 @@ impl Direction {
         }
     }
 
-    fn left(&self) -> Direction {
+    fn left(self) -> Direction {
         match self {
             Direction::North => Direction::West,
             Direction::West => Direction::South,

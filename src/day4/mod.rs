@@ -31,7 +31,7 @@ pub fn step2(input: &str) {
 }
 
 fn parse_range(input: &str) -> (SixDigits, SixDigits) {
-    let v: Vec<SixDigits> = input.split("-").take(2).map(SixDigits::from_str).collect();
+    let v: Vec<SixDigits> = input.split('-').take(2).map(SixDigits::from_str).collect();
     (v[0], v[1])
 }
 
@@ -57,7 +57,7 @@ impl SixDigits {
         }
     }
 
-    fn has_adjacent_same_digits(&self) -> bool {
+    fn has_adjacent_same_digits(self) -> bool {
         self.d0 == self.d1
             || self.d1 == self.d2
             || self.d2 == self.d3
@@ -65,7 +65,7 @@ impl SixDigits {
             || self.d4 == self.d5
     }
 
-    fn has_adjacent_same_digits2(&self) -> bool {
+    fn has_adjacent_same_digits2(self) -> bool {
         self.d0 == self.d1 && self.d1 != self.d2
             || self.d1 == self.d2 && self.d0 != self.d1 && self.d2 != self.d3
             || self.d2 == self.d3 && self.d1 != self.d2 && self.d3 != self.d4
@@ -73,8 +73,8 @@ impl SixDigits {
             || self.d4 == self.d5 && self.d3 != self.d4
     }
 
-    fn next(&self) -> SixDigits {
-        let mut next = self.clone();
+    fn next(self) -> SixDigits {
+        let mut next = self;
         if self.d5 < 9 {
             next.d5 += 1;
         } else if self.d4 < 9 {

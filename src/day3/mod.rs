@@ -57,7 +57,7 @@ impl Path {
     fn from_str(input: &str) -> Path {
         let mut current_coord = Coord { x: 0, y: 0 };
         let mut segments = Vec::new();
-        for pstr in input.split(",") {
+        for pstr in input.split(',') {
             let segment = current_coord.make_segment(pstr);
             current_coord = segment.get_end();
             segments.push(segment);

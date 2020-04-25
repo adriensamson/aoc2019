@@ -2,11 +2,8 @@ use std::fmt::{Display, Error, Formatter};
 
 pub fn step1(input: &str) {
     let layers = parse_img(input, 25, 6);
-    let min0layer = layers.iter().min_by_key(|l| l.count_char(&'0')).unwrap();
-    println!(
-        "{}",
-        min0layer.count_char(&'1') * min0layer.count_char(&'2')
-    );
+    let min0layer = layers.iter().min_by_key(|l| l.count_char('0')).unwrap();
+    println!("{}", min0layer.count_char('1') * min0layer.count_char('2'));
 }
 pub fn step2(input: &str) {
     let layers = parse_img(input, 25, 6);
@@ -20,10 +17,10 @@ struct Layer {
 }
 
 impl Layer {
-    fn count_char(&self, c: &char) -> usize {
+    fn count_char(&self, c: char) -> usize {
         self.rows
             .iter()
-            .map(|row| row.iter().filter(|&c0| c0 == c).count())
+            .map(|row| row.iter().filter(|&&c0| c0 == c).count())
             .sum()
     }
 }
@@ -39,7 +36,7 @@ impl Display for Layer {
                     _ => write!(f, "?")?,
                 };
             }
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
         Result::Ok(())
     }
@@ -68,7 +65,7 @@ fn parse_img(input: &str, w: usize, h: usize) -> Vec<Layer> {
     layers
 }
 
-fn merge_layers(layers: &Vec<Layer>) -> Layer {
+fn merge_layers(layers: &[Layer]) -> Layer {
     let mut dest = layers[0].clone();
     for i in 0..dest.rows.len() {
         for j in 0..dest.rows[0].len() {
