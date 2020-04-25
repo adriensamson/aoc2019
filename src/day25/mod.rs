@@ -37,7 +37,7 @@ impl IntCodeIo for Tty {
     }
 }
 
-/**
+/*
 west
 take cake
 west

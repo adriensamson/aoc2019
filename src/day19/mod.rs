@@ -21,7 +21,7 @@ pub fn step2(input : &str) {
         x += 1;
     }
     'y: loop {
-        'x: loop {
+        loop {
             let right100 = beam_program.is_tracted(x + 99, y);
             let bottom100 = beam_program.is_tracted(x, y + 99);
             match (right100, bottom100) {
