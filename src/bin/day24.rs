@@ -4,8 +4,9 @@ fn main() {
     step2(input);
 }
 
-use aoc2019::coord::Coord2;
+use aoc2019::coord::coord2u::Coord2u;
 use std::collections::{HashMap, HashSet};
+use aoc2019::coord::map2u::{Map2u, FromChar};
 
 pub fn step1(input: &str) {
     let mut seen = HashSet::new();
@@ -30,59 +31,55 @@ pub fn step2(input: &str) {
     println!("{}", count);
 }
 
-struct Map(Vec<Vec<bool>>);
+#[derive(Copy, Clone)]
+struct Infected(bool);
+struct Map(Map2u<Infected>);
+
+impl FromChar for Infected {
+    fn from_char(c: char) -> Self {
+        Infected(c == '#')
+    }
+}
 
 impl Map {
     fn from_str(input: &str) -> Map {
-        let mut rows = Vec::new();
-        for line in input.trim().lines() {
-            let mut row = Vec::new();
-            for c in line.chars() {
-                row.push(c == '#');
-            }
-            rows.push(row);
-        }
-        Map(rows)
+        Map(Map2u::from_str(input))
     }
 
-    fn is_infected(&self, c: &Coord2) -> bool {
-        *self
+    fn is_infected(&self, c: Coord2u) -> bool {
+        self
             .0
-            .get(c.y)
-            .and_then(|row| row.get(c.x))
-            .unwrap_or(&false)
+            .get_opt(c)
+            .map(|inf| inf.0)
+            .unwrap_or(false)
     }
 
     fn step(&self) -> Map {
-        let mut new_vec = self.0.clone();
-        for (y, row) in self.0.iter().enumerate() {
-            for (x, &infested) in row.iter().enumerate() {
-                let nb_around = Coord2::new(x, y)
-                    .around()
-                    .iter()
-                    .filter(|c| self.is_infected(c))
-                    .count();
-                if infested && nb_around != 1 {
-                    new_vec[y][x] = false;
-                }
-                if !infested && (nb_around == 1 || nb_around == 2) {
-                    new_vec[y][x] = true;
-                }
+        let mut new_map = self.0.clone();
+        for (coord, infected) in self.0.iter() {
+            let nb_around = coord
+                .around()
+                .iter()
+                .filter(|c| self.is_infected(**c))
+                .count();
+            if infected.0 && nb_around != 1 {
+                new_map.set(coord, Infected(false));
+            }
+            if !infected.0 && (nb_around == 1 || nb_around == 2) {
+                new_map.set(coord, Infected(true));
             }
         }
-        Map(new_vec)
+        Map(new_map)
     }
 
     fn get_biodiversity_rating(&self) -> usize {
         let mut sum = 0;
         let mut pow = 1;
-        for row in &self.0 {
-            for &infested in row {
-                if infested {
-                    sum += pow;
-                }
-                pow *= 2;
+        for (_, infected) in self.0.iter() {
+            if infected.0 {
+                sum += pow;
             }
+            pow *= 2;
         }
         sum
     }

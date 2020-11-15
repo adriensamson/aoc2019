@@ -7,8 +7,9 @@ fn main() {
 use std::collections::{HashMap, HashSet};
 use std::iter::FromIterator;
 
-use aoc2019::coord::Coord2 as Coord;
+use aoc2019::coord::coord2u::Coord2u as Coord;
 use aoc2019::path_finder::{find_shortest_path, PathState};
+use aoc2019::coord::map2u::{FromChar, Map2u};
 
 pub fn step1(input: &str) {
     let map = &Map::parse(input);
@@ -38,7 +39,7 @@ enum State {
     Door(char),
 }
 
-impl State {
+impl FromChar for State {
     fn from_char(c: char) -> State {
         match c {
             '.' => State::Empty,
@@ -51,60 +52,46 @@ impl State {
     }
 }
 
-struct Map {
-    rows: Vec<Vec<State>>,
-}
+struct Map(Map2u<State>);
 
 impl Map {
     fn parse(input: &str) -> Map {
-        let rows = input
-            .trim()
-            .lines()
-            .map(|l| l.chars().map(State::from_char).collect())
-            .collect();
-        Map { rows }
+        Map(Map2u::from_str(input))
     }
 
     fn get_starts(&self) -> Vec<Coord> {
-        self.rows
-            .iter()
-            .enumerate()
-            .flat_map(|(y, row)| {
-                row.iter().enumerate().filter_map(move |(x, s)| {
-                    if *s == State::Start {
-                        Some(Coord { x, y })
-                    } else {
-                        None
-                    }
-                })
-            })
-            .collect()
+        self.0.iter().filter_map(|(c, s)| {
+            if s == State::Start {
+                Some(c)
+            } else {
+                None
+            }
+        }).collect()
     }
 
     fn replace_start(&mut self) {
         let start = self.get_starts()[0];
-        self.rows[start.y - 1][start.x - 1] = State::Start;
-        self.rows[start.y - 1][start.x] = State::Wall;
-        self.rows[start.y - 1][start.x + 1] = State::Start;
-        self.rows[start.y][start.x - 1] = State::Wall;
-        self.rows[start.y][start.x] = State::Wall;
-        self.rows[start.y][start.x + 1] = State::Wall;
-        self.rows[start.y + 1][start.x - 1] = State::Start;
-        self.rows[start.y + 1][start.x] = State::Wall;
-        self.rows[start.y + 1][start.x + 1] = State::Start;
+
+        self.0.set(start.top().left(), State::Start);
+        self.0.set(start.top(), State::Wall);
+        self.0.set(start.top().right(), State::Start);
+        self.0.set(start.left(), State::Wall);
+        self.0.set(start, State::Wall);
+        self.0.set(start.right(), State::Wall);
+        self.0.set(start.bottom().left(), State::Start);
+        self.0.set(start.bottom(), State::Wall);
+        self.0.set(start.bottom().right(), State::Start);
     }
 
-    fn get_state_at_coord(&self, c: &Coord) -> Option<State> {
-        self.rows.get(c.y).and_then(|row| row.get(c.x)).copied()
+    fn get_state_at_coord(&self, c: Coord) -> State {
+        self.0.get(c)
     }
 
     fn get_all_keys(&self) -> HashSet<char> {
         let mut keys = HashSet::new();
-        for row in &self.rows {
-            for s in row {
-                if let State::Key(c) = s {
-                    keys.insert(*c);
-                }
+        for (_, s) in self.0.iter() {
+            if let State::Key(c) = s {
+                keys.insert(c);
             }
         }
         keys
@@ -163,20 +150,20 @@ impl ReachableKeys for Map {
             n += 1;
             let mut next = HashSet::new();
             for c in current {
-                for a in &c.around() {
-                    if visited.contains(a) {
+                for a in c.around() {
+                    if visited.contains(&a) {
                         continue;
                     }
-                    visited.push(*a);
+                    visited.push(a);
                     match self.get_state_at_coord(a) {
-                        None | Some(State::Wall) => {
+                        State::Wall => {
                             continue;
                         }
-                        Some(State::Empty) => {
-                            next.insert(*a);
+                        State::Empty => {
+                            next.insert(a);
                         }
-                        Some(s) => {
-                            found.push((*a, n, s));
+                        s => {
+                            found.push((a, n, s));
                         }
                     }
                 }
@@ -340,7 +327,7 @@ impl GraphMap {
             let mut next = HashSet::new();
             for c in current {
                 visited.push(c);
-                let s = map.get_state_at_coord(&c).unwrap();
+                let s = map.get_state_at_coord(c);
                 for (c2, d, s2) in map.get_reachable_nodes(&c) {
                     if visited.contains(&c2) {
                         continue;

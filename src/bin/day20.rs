@@ -4,8 +4,9 @@ fn main() {
     step2(input);
 }
 
-use aoc2019::coord::Coord2;
+use aoc2019::coord::coord2u::Coord2u;
 use aoc2019::path_finder::{find_shortest_path, PathState};
+use aoc2019::coord::map2u::Map2u;
 
 pub fn step1(input: &str) {
     let map = Map::parse(input);
@@ -22,62 +23,51 @@ pub fn step2(input: &str) {
     println!("{}", path.unwrap().distance);
 }
 
-struct Map(Vec<Vec<char>>);
+struct Map(Map2u<char>);
 
 impl Map {
     fn parse(input: &str) -> Map {
-        let mut rows = Vec::new();
-        for l in input.lines() {
-            let mut row = Vec::new();
-            for c in l.chars() {
-                row.push(c);
-            }
-            rows.push(row);
-        }
-        Map(rows)
+        Map(Map2u::from_str(input))
     }
 
-    fn get_at(&self, coord: Coord2) -> Option<char> {
-        self.0.get(coord.y).and_then(|r| r.get(coord.x).copied())
+    fn get_at(&self, coord: Coord2u) -> Option<char> {
+        self.0.get_opt(coord)
     }
 
-    fn get_start(&self) -> Option<Coord2> {
-        for (y, row) in self.0.iter().enumerate() {
-            for (x, _ch) in row.iter().enumerate() {
-                let c1 = Coord2::new(x, y);
-                if self.get_at(c1) == Some('.') && self.get_portal_name(c1) == Some(('A', 'A')) {
-                    return Some(c1);
-                }
+    fn get_start(&self) -> Option<Coord2u> {
+        for (c1, _ch) in self.0.iter() {
+            if self.get_at(c1) == Some('.') && self.get_portal_name(c1) == Some(('A', 'A')) {
+                return Some(c1);
             }
         }
         None
     }
 
-    fn get_portal_name(&self, o: Coord2) -> Option<(char, char)> {
+    fn get_portal_name(&self, o: Coord2u) -> Option<(char, char)> {
         if let (Some(c1 @ 'A'..='Z'), Some(c2 @ 'A'..='Z')) = (
-            self.get_at(Coord2::new(o.x + 1, o.y)),
-            self.get_at(Coord2::new(o.x + 2, o.y)),
+            self.get_at(Coord2u::new(o.x + 1, o.y)),
+            self.get_at(Coord2u::new(o.x + 2, o.y)),
         ) {
             return Some((c1, c2));
         }
         if let (Some(c1 @ 'A'..='Z'), Some(c2 @ 'A'..='Z')) = (
-            self.get_at(Coord2::new(o.x, o.y + 1)),
-            self.get_at(Coord2::new(o.x, o.y + 2)),
+            self.get_at(Coord2u::new(o.x, o.y + 1)),
+            self.get_at(Coord2u::new(o.x, o.y + 2)),
         ) {
             return Some((c1, c2));
         }
         if o.x >= 2 {
             if let (Some(c1 @ 'A'..='Z'), Some(c2 @ 'A'..='Z')) = (
-                self.get_at(Coord2::new(o.x - 2, o.y)),
-                self.get_at(Coord2::new(o.x - 1, o.y)),
+                self.get_at(Coord2u::new(o.x - 2, o.y)),
+                self.get_at(Coord2u::new(o.x - 1, o.y)),
             ) {
                 return Some((c1, c2));
             }
         }
         if o.y >= 2 {
             if let (Some(c1 @ 'A'..='Z'), Some(c2 @ 'A'..='Z')) = (
-                self.get_at(Coord2::new(o.x, o.y - 2)),
-                self.get_at(Coord2::new(o.x, o.y - 1)),
+                self.get_at(Coord2u::new(o.x, o.y - 2)),
+                self.get_at(Coord2u::new(o.x, o.y - 1)),
             ) {
                 return Some((c1, c2));
             }
@@ -86,26 +76,26 @@ impl Map {
         None
     }
 
-    fn find_portal(&self, name: (char, char), from: Coord2) -> Option<Coord2> {
-        for (y, row) in self.0.iter().enumerate() {
-            for (x, ch) in row.iter().enumerate() {
-                let c1 = Coord2::new(x, y);
-                if *ch == '.' && c1 != from && self.get_portal_name(c1) == Some(name) {
-                    return Some(c1);
-                }
+    fn find_portal(&self, name: (char, char), from: Coord2u) -> Option<Coord2u> {
+        for (c1, ch) in self.0.iter() {
+            if ch == '.' && c1 != from && self.get_portal_name(c1) == Some(name) {
+                return Some(c1);
             }
         }
         None
     }
 
-    fn is_outer(&self, c: &Coord2) -> bool {
-        c.y == 2 || c.x == 2 || c.y == self.0.len() - 3 || c.x == self.0[2].len() - 1
+    fn is_outer(&self, c: &Coord2u) -> bool {
+        c.y == 2
+            || c.x == 2
+            || self.get_at(c.bottom().bottom()).is_none()
+            || self.get_at(c.right()).is_none()
     }
 }
 
 struct Path<'a> {
     map: &'a Map,
-    coord: Coord2,
+    coord: Coord2u,
     distance: usize,
 }
 
@@ -120,7 +110,7 @@ impl<'a> Path<'a> {
 }
 
 impl PathState for Path<'_> {
-    type HashKey = Coord2;
+    type HashKey = Coord2u;
 
     fn is_finished(&self) -> bool {
         self.map.get_portal_name(self.coord) == Some(('Z', 'Z'))
@@ -160,7 +150,7 @@ impl PathState for Path<'_> {
 
 struct LayeredPath<'a> {
     map: &'a Map,
-    coord: Coord2,
+    coord: Coord2u,
     layer: usize,
     distance: usize,
 }
@@ -177,7 +167,7 @@ impl<'a> LayeredPath<'a> {
 }
 
 impl PathState for LayeredPath<'_> {
-    type HashKey = (usize, Coord2);
+    type HashKey = (usize, Coord2u);
 
     fn is_finished(&self) -> bool {
         self.layer == 0 && self.map.get_portal_name(self.coord) == Some(('Z', 'Z'))
