@@ -9,7 +9,7 @@ impl<S : Copy> Map2u<S> {
     }
 
     pub fn get_opt(&self, c : Coord2u) -> Option<S> {
-        self.0.get(c.y).and_then(|row| row.get(c.x)).map(|s| *s)
+        self.0.get(c.y).and_then(|row| row.get(c.x)).copied()
     }
 
     pub fn set(&mut self, c : Coord2u, s : S) {
@@ -27,20 +27,12 @@ impl<S : Copy> Map2u<S> {
     }
 }
 
-pub trait FromChar {
-    fn from_char(c: char) -> Self;
-}
-
-impl FromChar for char {
-    fn from_char(c: char) -> char {c}
-}
-
-impl<S : FromChar> Map2u<S> {
-    pub fn from_str(input: &str) -> Map2u<S> {
+impl<S : From<char>> From<&str> for Map2u<S> {
+    fn from(input: &str) -> Map2u<S> {
         let rows = input
             .trim()
             .lines()
-            .map(|l| l.chars().map(S::from_char).collect())
+            .map(|l| l.chars().map(|c| c.into()).collect())
             .collect();
         Map2u(rows)
     }

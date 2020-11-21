@@ -30,7 +30,7 @@ pub fn step2(input: &str) {
         .iter()
         .map(|int| paths[0].steps_to_coord(int).unwrap() + paths[1].steps_to_coord(int).unwrap())
         .collect();
-    steps.sort();
+    steps.sort_unstable();
     println!("{:?}", steps);
     println!("{}", steps[1]);
 }

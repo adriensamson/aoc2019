@@ -27,7 +27,7 @@ struct Map(Map2u<char>);
 
 impl Map {
     fn parse(input: &str) -> Map {
-        Map(Map2u::from_str(input))
+        Map(Map2u::from(input))
     }
 
     fn get_at(&self, coord: Coord2u) -> Option<char> {

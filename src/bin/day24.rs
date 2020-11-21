@@ -6,7 +6,7 @@ fn main() {
 
 use aoc2019::coord::coord2u::Coord2u;
 use std::collections::{HashMap, HashSet};
-use aoc2019::coord::map2u::{Map2u, FromChar};
+use aoc2019::coord::map2u::Map2u;
 
 pub fn step1(input: &str) {
     let mut seen = HashSet::new();
@@ -35,15 +35,15 @@ pub fn step2(input: &str) {
 struct Infected(bool);
 struct Map(Map2u<Infected>);
 
-impl FromChar for Infected {
-    fn from_char(c: char) -> Self {
+impl From<char> for Infected {
+    fn from(c: char) -> Self {
         Infected(c == '#')
     }
 }
 
 impl Map {
     fn from_str(input: &str) -> Map {
-        Map(Map2u::from_str(input))
+        Map(Map2u::from(input))
     }
 
     fn is_infected(&self, c: Coord2u) -> bool {

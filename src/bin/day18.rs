@@ -9,7 +9,7 @@ use std::iter::FromIterator;
 
 use aoc2019::coord::coord2u::Coord2u as Coord;
 use aoc2019::path_finder::{find_shortest_path, PathState};
-use aoc2019::coord::map2u::{FromChar, Map2u};
+use aoc2019::coord::map2u::Map2u;
 
 pub fn step1(input: &str) {
     let map = &Map::parse(input);
@@ -39,8 +39,8 @@ enum State {
     Door(char),
 }
 
-impl FromChar for State {
-    fn from_char(c: char) -> State {
+impl From<char> for State {
+    fn from(c: char) -> State {
         match c {
             '.' => State::Empty,
             '@' => State::Start,
@@ -56,7 +56,7 @@ struct Map(Map2u<State>);
 
 impl Map {
     fn parse(input: &str) -> Map {
-        Map(Map2u::from_str(input))
+        Map(Map2u::from(input))
     }
 
     fn get_starts(&self) -> Vec<Coord> {
@@ -225,7 +225,7 @@ impl<'a> PathState for ExaminedPath<'a> {
     fn get_hash_key(&self) -> String {
         let mut ordered = self.keys.clone();
         ordered.pop();
-        ordered.sort();
+        ordered.sort_unstable();
         ordered.push(*self.keys.last().unwrap());
         String::from_iter(ordered)
     }
@@ -298,7 +298,7 @@ impl PathState for ExaminedPath4<'_> {
 
     fn get_hash_key(&self) -> Self::HashKey {
         let mut ordered = self.previous_keys.clone();
-        ordered.sort();
+        ordered.sort_unstable();
         for k in &self.current_keys {
             ordered.push(*k);
         }
