@@ -1,4 +1,5 @@
 use crate::coord::coord2u::Coord2u;
+use std::fmt::{Display, Formatter};
 
 #[derive(Clone)]
 pub struct Map2u<S> (Vec<Vec<S>>);
@@ -38,3 +39,15 @@ impl<S : From<char>> From<&str> for Map2u<S> {
     }
 }
 
+impl<S : Into<char> + Copy> Display for Map2u<S> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        for row in &self.0 {
+            for &cell in row {
+                let c : char = cell.into();
+                write!(f, "{}", c)?;
+            }
+            writeln!(f)?;
+        }
+        Ok(())
+    }
+}
